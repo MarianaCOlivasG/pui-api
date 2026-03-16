@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Api/">
+    <Project Path="PUI.Api/PUI.Api.csproj" Id="49f1a2f0-ec1a-4489-ae16-558f916f725a" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="PUI.Application/PUI.Application.csproj" Id="717a71f1-9bb4-4cae-a316-2813f496e201" />
+    <Project Path="PUI.Domain/PUI.Domain.csproj" Id="316a4784-fa6b-4db3-8abe-563e4cdfbc4c" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="PUI.Identity/PUI.Identity.csproj" Id="2e95788f-4ae2-438a-917d-f3d8654e8976" />
+    <Project Path="PUI.Persistence/PUI.Persistence.csproj" Id="25897802-cb88-4d88-9e04-08b7b48111cd" />
+  </Folder>
+</Solution>
