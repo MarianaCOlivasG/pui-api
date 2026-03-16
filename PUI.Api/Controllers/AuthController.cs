@@ -10,7 +10,7 @@ using PUI.Application.Utils.Mediator;
 namespace PUI.Api.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v1/auth")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -23,26 +23,36 @@ namespace PUI.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(CredencialesUsuarioDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var command = new RegistrarUsuarioCommand
             {
-                Credenciales = dto
+                Credenciales = new CredencialesUsuarioDto
+                {
+                    UserName = dto.Usuario,
+                    Password = dto.Pass
+                }
             };
 
             var result = await mediator.Send(command);
+
             return Ok(result);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(CredencialesUsuarioDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             var command = new LoginUsuarioCommand
             {
-                Credenciales = dto
+                Credenciales = new CredencialesUsuarioDto
+                {
+                    UserName = dto.Usuario,
+                    Password = dto.Pass
+                }
             };
 
             var result = await mediator.Send(command);
+
             return Ok(result);
         }
 

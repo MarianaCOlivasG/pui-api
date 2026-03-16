@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+using PUI.Api.Configuration;
 using PUI.Api.Middlewares;
 using PUI.Application;
 using PUI.Identity;
@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // OpenAPI
 builder.Services.AddOpenApi();
 
-// Servicios de la aplicación
+// Servicios
 builder.Services.AgregarServiciosDeAplicacion();
 builder.Services.AgregarServiciosDePersistencia(builder.Configuration);
 builder.Services.AgregarServiciosDeIdentity(builder.Configuration);
@@ -30,38 +30,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Controllers + manejo limpio de errores de validación
-builder.Services
-    .AddControllers()
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            var errores = context.ModelState
-                .Where(e => e.Value?.Errors.Count > 0)
-                .SelectMany(e => e.Value!.Errors.Select(x =>
-                {
-                    if (!string.IsNullOrWhiteSpace(x.ErrorMessage))
-                        return x.ErrorMessage;
-
-                    if (e.Key == "$")
-                        return "El JSON enviado no es válido.";
-
-                    return $"El campo '{e.Key}' es inválido.";
-                }))
-                .Distinct()
-                .ToList();
-
-            var respuesta = new
-            {
-                mensaje = "Errores de validación",
-                errores,
-                traceId = context.HttpContext.TraceIdentifier
-            };
-
-            return new BadRequestObjectResult(respuesta);
-        };
-    });
+builder.Services.AddControllers();
+builder.Services.AddApiValidation();
 
 var app = builder.Build();
 
@@ -75,7 +45,7 @@ app.UseManejadorExcepciones();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// OpenAPI solo en desarrollo
+// OpenAPI
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
