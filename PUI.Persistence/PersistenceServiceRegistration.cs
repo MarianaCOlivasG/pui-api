@@ -13,12 +13,14 @@ namespace PUI.Persistencia
         public static IServiceCollection AgregarServiciosDePersistencia(this IServiceCollection services, IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("PuiConnectionString");
-         
+
             services.AddDbContext<PUIDbContext>(options =>
                 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
             );
 
             services.AddScoped<IReportesRepository, ReportesRepository>();
+            services.AddScoped<IReportesHistorialRepository, ReportesHistorialRepository>();
+            services.AddScoped<IEventosRepository, EventosRepository>();
 
             services.AddScoped<IUnitOfWork, EFCoreUnitOfWork>();
 

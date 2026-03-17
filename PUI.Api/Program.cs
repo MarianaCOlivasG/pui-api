@@ -40,6 +40,7 @@ app.UseHttpsRedirection();
 
 app.UseCors();
 
+app.UseApiLogging();
 app.UseManejadorExcepciones();
 
 app.UseAuthentication();

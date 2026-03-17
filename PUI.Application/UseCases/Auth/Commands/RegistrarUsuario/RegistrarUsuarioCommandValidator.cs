@@ -1,6 +1,5 @@
 
 
-using PUI.Application.UseCases.Auth.Commands.RegistrarUsuario;
 using FluentValidation;
 
 namespace PUI.Application.UseCases.Auth.Commands.RegistrarUsuario
@@ -10,7 +9,8 @@ namespace PUI.Application.UseCases.Auth.Commands.RegistrarUsuario
         public RegistrarUsuarioCommandValidator()
         {
             RuleFor(x => x.Credenciales.UserName)
-                .EmailAddress().WithMessage("El username no es válido.");
+                .MinimumLength(3).WithMessage("El username debe tener al menos 3 caracteres")
+                .NotEmpty().WithMessage("El username no es válido.");
 
             RuleFor(x => x.Credenciales.Password)
                 .NotEmpty().WithMessage("La contraseña es obligatoria.")

@@ -9,52 +9,86 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
 {
     public class ActivarReporteUseCase : IRequestHandler<ActivarReporteCommand, Guid>
     {
-        private readonly IReportesRepository repository;
-        private readonly IUnitOfWork unitOfWork;
+        private readonly IReportesRepository _repository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IReportesHistorialRepository _historialRepository;
+        private readonly IEventosRepository _eventosRepository;
 
         public ActivarReporteUseCase(
             IReportesRepository repository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IReportesHistorialRepository historialRepository,
+            IEventosRepository eventosRepository)
         {
-            this.repository = repository;
-            this.unitOfWork = unitOfWork;
+            _repository = repository;
+            _unitOfWork = unitOfWork;
+            _historialRepository = historialRepository;
+            _eventosRepository = eventosRepository;
         }
 
         public async Task<Guid> Handle(ActivarReporteCommand request)
         {
             try
             {
-                var reporte = new Reporte(
-                    request.Id,
-                    new Curp(request.Curp),
-                    request.LugarNacimiento,
-                    request.Nombre,
-                    request.PrimerApellido,
-                    request.SegundoApellido,
-                    string.IsNullOrWhiteSpace(request.SexoAsignado) ? null : Enum.Parse<Sexo>(request.SexoAsignado),
-                    string.IsNullOrWhiteSpace(request.FechaNacimiento) ? null : DateTime.Parse(request.FechaNacimiento),
-                    string.IsNullOrWhiteSpace(request.FechaDesaparicion) ? null : DateTime.Parse(request.FechaDesaparicion),
-                    string.IsNullOrWhiteSpace(request.Correo) ? null : new CorreoElectronico(request.Correo),
-                    request.Telefono,
-                    request.Direccion,
-                    request.Calle,
-                    request.Numero,
-                    request.Colonia,
-                    request.CodigoPostal,
-                    request.MunicipioOAlcaldia,
-                    request.EntidadFederativa
-                );
+                // 1️ Crear reporte
+                var reporte = CrearReporte(request);
 
-                var respuesta = await repository.Agregar(reporte);
-                await unitOfWork.Persistir();
+                var respuesta = await _repository.Agregar(reporte);
+
+                // 2️ Guardar historial usando constructor de dominio
+                var historial = new ReporteHistorial(
+                    idReporte: respuesta.Id,
+                    estatusNuevo: respuesta.Estatus,
+                    estatusAnterior: null,
+                    motivo: "Activación inicial desde PUI"
+                );
+                await _historialRepository.Agregar(historial);
+
+                // 3️ Crear evento de negocio usando constructor de dominio
+                var evento = new Evento(
+                    tipoEvento: "ACTIVACION",
+                    origen: "API_PUI",
+                    idReporte: respuesta.Id,
+                    curp: respuesta.Curp,
+                    resultado: "EXITO",
+                    descripcion: "Reporte activado correctamente"
+                );
+                await _eventosRepository.Agregar(evento);
+
+                // 4️ Persistir todo en una sola transacción
+                await _unitOfWork.Persistir();
 
                 return respuesta.Id;
             }
             catch
             {
-                await unitOfWork.Reversar();
+                await _unitOfWork.Reversar();
                 throw;
             }
+        }
+
+        private Reporte CrearReporte(ActivarReporteCommand request)
+        {
+            return new Reporte(
+                folioPui: request.Id,
+                curp: new Curp(request.Curp),
+                lugarNacimiento: request.LugarNacimiento,
+                nombre: request.Nombre,
+                primerApellido: request.PrimerApellido,
+                segundoApellido: request.SegundoApellido,
+                sexo: string.IsNullOrWhiteSpace(request.SexoAsignado) ? null : Enum.Parse<Sexo>(request.SexoAsignado),
+                fechaNacimiento: string.IsNullOrWhiteSpace(request.FechaNacimiento) ? null : DateTime.Parse(request.FechaNacimiento),
+                fechaDesaparicion: string.IsNullOrWhiteSpace(request.FechaDesaparicion) ? null : DateTime.Parse(request.FechaDesaparicion),
+                correo: string.IsNullOrWhiteSpace(request.Correo) ? null : new CorreoElectronico(request.Correo),
+                telefono: request.Telefono,
+                direccion: request.Direccion,
+                calle: request.Calle,
+                numero: request.Numero,
+                colonia: request.Colonia,
+                codigoPostal: request.CodigoPostal,
+                municipioOAlcaldia: request.MunicipioOAlcaldia,
+                entidadFederativa: request.EntidadFederativa
+            );
         }
 
     }

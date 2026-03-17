@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PUI.Api.DTOs.Auth;
 using PUI.Api.DTOs.Reportes;
 using PUI.Application.UseCases.Auth.Commands.LoginUsuario;
@@ -42,8 +43,15 @@ namespace PUI.Api.Controllers
 
 
 
+        [Authorize]
+        [HttpPost("activar-reporte-prueba")]
+        public async Task<IActionResult> ActivarReportePrueba([FromBody] ActivarReportePUIDto dto)
+        {
+            return Ok();
+        }
 
 
+        [Authorize]
         [HttpPost("activar-reporte")]
         public async Task<IActionResult> ActivarReporte([FromBody] ActivarReportePUIDto dto)
         {
