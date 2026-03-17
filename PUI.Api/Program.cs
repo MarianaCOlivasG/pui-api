@@ -14,7 +14,7 @@ builder.Services.AddOpenApi();
 // Servicios
 builder.Services.AgregarServiciosDeAplicacion();
 builder.Services.AgregarServiciosDePersistencia(builder.Configuration);
-builder.Services.AgregarServiciosDeInfraestructure();
+builder.Services.AgregarServiciosDeInfraestructure(builder.Configuration);
 builder.Services.AgregarServiciosDeIdentity(builder.Configuration);
 
 // JOB

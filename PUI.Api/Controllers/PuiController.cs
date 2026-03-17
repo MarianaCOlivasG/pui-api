@@ -97,7 +97,7 @@ namespace PUI.Api.Controllers
 
             var id = await mediator.Send(command);
 
-            return Ok(new { id });
+            return Ok(new { message = "Registro de finalización de búsqueda histórica guardado correctamente" });
         }
 
 
