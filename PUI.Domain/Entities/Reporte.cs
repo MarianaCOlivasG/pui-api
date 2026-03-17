@@ -21,11 +21,18 @@ namespace PUI.Domain.Entities
         public CorreoElectronico? Correo { get; private set; }
         public string? Telefono { get; private set; }
 
+        public string? Direccion { get; private set; }
+        public string? Calle { get; private set; }
+        public string? Numero { get; private set; }
+        public string? Colonia { get; private set; }
+        public string? CodigoPostal { get; private set; }
+        public string? MunicipioOAlcaldia { get; private set; }
+        public string? EntidadFederativa { get; private set; }
+
         public DateTime FechaActivacion { get; private set; }
         public DateTime? FechaDesactivacion { get; private set; }
 
         public Curp Curp { get; private set; } = null!;
-
         public Sexo? Sexo { get; private set; }
         public EstatusReporte Estatus { get; private set; }
 
@@ -42,7 +49,14 @@ namespace PUI.Domain.Entities
             DateTime? fechaNacimiento = null,
             DateTime? fechaDesaparicion = null,
             CorreoElectronico? correo = null,
-            string? telefono = null
+            string? telefono = null,
+            string? direccion = null,
+            string? calle = null,
+            string? numero = null,
+            string? colonia = null,
+            string? codigoPostal = null,
+            string? municipioOAlcaldia = null,
+            string? entidadFederativa = null
         )
         {
             AplicarReglasDeNegocio(folioPui, curp, lugarNacimiento);
@@ -63,6 +77,14 @@ namespace PUI.Domain.Entities
 
             Correo = correo;
             Telefono = telefono;
+
+            Direccion = direccion;
+            Calle = calle;
+            Numero = numero;
+            Colonia = colonia;
+            CodigoPostal = codigoPostal;
+            MunicipioOAlcaldia = municipioOAlcaldia;
+            EntidadFederativa = entidadFederativa;
 
             FechaActivacion = DateTime.UtcNow;
             Estatus = EstatusReporte.Activo;

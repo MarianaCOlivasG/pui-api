@@ -1,8 +1,9 @@
 
 
 
-using PUI.Application.Utils.Mediator;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using PUI.Application.Utils.Mediator;
 
 namespace PUI.Application
 {
@@ -24,6 +25,9 @@ namespace PUI.Application
                     .AsImplementedInterfaces()
                     .WithScopedLifetime()
             );
+
+            services.AddValidatorsFromAssemblies(new[] { typeof(RegistroServiciosDeAplicacion).Assembly });
+
 
 
             return services;

@@ -9,7 +9,6 @@ namespace PUI.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<Reporte> builder)
         {
-
             var encryptString = new EncryptStringConverter();
             var encryptDate = new EncryptDateConverter();
 
@@ -17,6 +16,7 @@ namespace PUI.Persistence.Configurations
 
             builder.HasKey(r => r.Id);
 
+            // Columnas principales
             builder.Property(r => r.Id)
                 .HasColumnName("id_reporte")
                 .HasMaxLength(36)
@@ -43,7 +43,8 @@ namespace PUI.Persistence.Configurations
                 .HasConversion(encryptString);
 
             builder.Property(r => r.LugarNacimiento)
-               .HasColumnName("lugar_nacimiento");
+                .HasColumnName("lugar_nacimiento")
+                .HasMaxLength(100);
 
             builder.Property(r => r.FechaNacimiento)
                 .HasColumnName("fecha_nacimiento")
@@ -73,6 +74,43 @@ namespace PUI.Persistence.Configurations
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
+            // Campos de dirección completos
+            builder.Property(r => r.Direccion)
+                .HasColumnName("direccion")
+                .HasConversion(encryptString)
+                .HasMaxLength(500);
+
+            builder.Property(r => r.Calle)
+                .HasColumnName("calle")
+                .HasConversion(encryptString)
+                .HasMaxLength(50);
+
+            builder.Property(r => r.Numero)
+                .HasColumnName("numero")
+                .HasConversion(encryptString)
+                .HasMaxLength(20);
+
+            builder.Property(r => r.Colonia)
+                .HasColumnName("colonia")
+                .HasConversion(encryptString)
+                .HasMaxLength(100);
+
+            builder.Property(r => r.CodigoPostal)
+                .HasColumnName("codigo_postal")
+                .HasConversion(encryptString)
+                .HasMaxLength(10);
+
+            builder.Property(r => r.MunicipioOAlcaldia)
+                .HasColumnName("municipio_alcaldia")
+                .HasConversion(encryptString)
+                .HasMaxLength(100);
+
+            builder.Property(r => r.EntidadFederativa)
+                .HasColumnName("entidad_federativa")
+                .HasConversion(encryptString)
+                .HasMaxLength(100);
+
+            // CURP
             builder.OwnsOne(r => r.Curp, curp =>
             {
                 curp.Property(c => c.Valor)
@@ -81,6 +119,7 @@ namespace PUI.Persistence.Configurations
                     .IsRequired();
             });
 
+            // Correo
             builder.OwnsOne(r => r.Correo, correo =>
             {
                 correo.Property(c => c.Valor)
@@ -91,9 +130,6 @@ namespace PUI.Persistence.Configurations
 
             builder.Navigation(r => r.Correo)
                    .IsRequired(false);
-
-
         }
     }
 }
-

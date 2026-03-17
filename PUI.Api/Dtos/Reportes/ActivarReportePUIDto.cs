@@ -100,7 +100,7 @@ namespace PUI.Api.DTOs.Reportes
         public string? Colonia { get; set; }
 
 
-        [StringLength(5, MinimumLength = 5, ErrorMessage = "El campo '{0}' debe tener {1} caracteres.")]
+        [StringLength(5, ErrorMessage = "El campo '{0}' no puede exceder los {1} caracteres.")]
         [Display(Name = "codigo_postal")]
         [JsonPropertyName("codigo_postal")]
         public string? CodigoPostal { get; set; }

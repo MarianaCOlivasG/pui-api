@@ -24,40 +24,28 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
         {
             try
             {
-                var curp = new Curp(request.Curp);
-
-                CorreoElectronico? correo = null;
-                if (!string.IsNullOrWhiteSpace(request.Correo))
-                    correo = new CorreoElectronico(request.Correo);
-
-                Sexo? sexo = null;
-                if (!string.IsNullOrWhiteSpace(request.SexoAsignado))
-                    sexo = Enum.Parse<Sexo>(request.SexoAsignado);
-
-                DateTime? fechaNacimiento = null;
-                if (!string.IsNullOrWhiteSpace(request.FechaNacimiento))
-                    fechaNacimiento = DateTime.Parse(request.FechaNacimiento);
-
-                DateTime? fechaDesaparicion = null;
-                if (!string.IsNullOrWhiteSpace(request.FechaDesaparicion))
-                    fechaDesaparicion = DateTime.Parse(request.FechaDesaparicion);
-
                 var reporte = new Reporte(
                     request.Id,
-                    curp,
+                    new Curp(request.Curp),
                     request.LugarNacimiento,
                     request.Nombre,
                     request.PrimerApellido,
                     request.SegundoApellido,
-                    sexo,
-                    fechaNacimiento,
-                    fechaDesaparicion,
-                    correo,
-                    request.Telefono
+                    string.IsNullOrWhiteSpace(request.SexoAsignado) ? null : Enum.Parse<Sexo>(request.SexoAsignado),
+                    string.IsNullOrWhiteSpace(request.FechaNacimiento) ? null : DateTime.Parse(request.FechaNacimiento),
+                    string.IsNullOrWhiteSpace(request.FechaDesaparicion) ? null : DateTime.Parse(request.FechaDesaparicion),
+                    string.IsNullOrWhiteSpace(request.Correo) ? null : new CorreoElectronico(request.Correo),
+                    request.Telefono,
+                    request.Direccion,
+                    request.Calle,
+                    request.Numero,
+                    request.Colonia,
+                    request.CodigoPostal,
+                    request.MunicipioOAlcaldia,
+                    request.EntidadFederativa
                 );
 
                 var respuesta = await repository.Agregar(reporte);
-
                 await unitOfWork.Persistir();
 
                 return respuesta.Id;
@@ -68,5 +56,6 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
                 throw;
             }
         }
+
     }
 }

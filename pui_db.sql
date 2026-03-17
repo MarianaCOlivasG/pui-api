@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_reportes (
     telefono VARCHAR(20) NULL COMMENT 'Telefono de contacto',
     correo VARCHAR(100) NULL COMMENT 'Correo electronico',
     direccion TEXT NULL COMMENT 'Direccion detallada de residencia',
+    calle VARCHAR(50) NULL COMMENT 'Calle o avenida de residencia',
+    numero VARCHAR(20) NULL COMMENT 'Número exterior/interior',
     colonia VARCHAR(100) NULL COMMENT 'Colonia de residencia',
     codigo_postal VARCHAR(10) NULL COMMENT 'Codigo postal',
     municipio_alcaldia VARCHAR(100) NULL COMMENT 'Municipio o Alcaldia',
@@ -52,7 +54,7 @@ CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_reportes (
     UNIQUE INDEX idx_folio_unique (folio_pui),
     INDEX idx_curp_search (curp),
     INDEX idx_estatus_pui (estatus)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Maestro de reportes PUI';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Listado de reportes PUI';
 
 -- 3. TABLA: pui_coincidencias (Relacionada a Reportes)
 CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_coincidencias (

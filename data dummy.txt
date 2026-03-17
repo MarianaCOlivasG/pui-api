@@ -1,0 +1,74 @@
+ACTIVAR REPORTE DE BUSQUEDA PUI-PAM
+
+// JSON 1 - Completo con todos los campos
+{
+  "id": "e7b5a4c2-9f4e-4a99-91a2-6d4a8a1eaf3d-550e8400-e29b-41d4-a716-446655440000",
+  "curp": "GARC890123HDFLLL09",
+  "lugar_nacimiento": "CDMX",
+  "nombre": "Juan",
+  "primer_apellido": "García",
+  "segundo_apellido": "López",
+  "fecha_nacimiento": "1989-01-23",
+  "fecha_desaparicion": "2023-06-15",
+  "sexo_asignado": "H",
+  "telefono": "5512345678",
+  "correo": "juan.garcia@example.com",
+  "direccion": "Av. Reforma 1234, Col. Centro",
+  "calle": "Reforma",
+  "numero": "1234",
+  "colonia": "Centro",
+  "codigo_postal": "06500",
+  "municipio_o_alcaldia": "Cuauhtémoc",
+  "entidad_federativa": "CDMX"
+}
+
+
+// JSON 2 - Campos opcionales nulos
+{
+  "id": "f1c2a3b4-5678-4cde-9f01-abcdef123456-550e8400-e29b-41d4-a716-446655440000",
+  "curp": "PERE850412MDFRLR05",
+  "lugar_nacimiento": "Jalisco",
+  "fecha_desaparicion": "2025-02-10",
+  "sexo_asignado": "M"
+}
+
+
+// JSON 3 - Solo campos obligatorios + algunos opcionales
+{
+  "id": "a1b2c3d4-9876-4abc-8def-123456abcdef-550e8400-e29b-41d4-a716-446655440000",
+  "curp": "LOPE900101HDFABC01",
+  "lugar_nacimiento": "Nuevo León",
+  "nombre": "Mariana",
+  "primer_apellido": "Olivas",
+  "segundo_apellido": "García",
+  "fecha_nacimiento": "1990-01-01",
+  "sexo_asignado": "X",
+  "telefono": "8123456789",
+  "codigo_postal": "64000",
+  "municipio_o_alcaldia": "Monterrey",
+  "entidad_federativa": "Nuevo León"
+}
+
+
+// JSON 4 - Formato fechas y CURP correctos, campos parciales
+{
+  "id": "b2c3d4e5-6789-4def-9abc-abcdef987654-550e8400-e29b-41d4-a716-446655440000",
+  "curp": "SANC920505MDFXYZ02",
+  "lugar_nacimiento": "CDMX",
+  "nombre": "Carlos",
+  "primer_apellido": "Sánchez",
+  "segundo_apellido": "Ramírez",
+  "fecha_nacimiento": "1992-05-05",
+  "sexo_asignado": "H",
+  "telefono": "5544332211",
+  "correo": "carlos.sanchez@example.com",
+  "entidad_federativa": "CDMX"
+}
+
+
+// JSON 5 - Datos mínimos
+{
+  "id": "c3d4e5f6-1234-4abc-8def-abcdef123abc-550e8400-e29b-41d4-a716-446655440000",
+  "curp": "MART851231HDFABC08",
+  "lugar_nacimiento": "Chiapas"
+}
