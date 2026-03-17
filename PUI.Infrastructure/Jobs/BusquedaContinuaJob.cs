@@ -4,6 +4,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PUI.Application.Interfaces.Persistence;
 using PUI.Application.Interfaces.Repositories;
+using PUI.Application.Interfaces.Servicios;
+using PUI.Domain.Entities;
 
 namespace PUI.Infrastructure.Jobs
 {
@@ -31,11 +33,8 @@ namespace PUI.Infrastructure.Jobs
             _delayHoras = configuration.GetValue<int>("Jobs:BusquedaContinua:DelayHorasEjecucion");
             _delayMinutos = configuration.GetValue<int>("Jobs:BusquedaContinua:DelayMinutosEjecucion");
 
-            // 🔥 fallback inteligente
             if (_delayHoras == 0 && _delayMinutos == 0)
-            {
-                _delayMinutos = 1; // mínimo 1 minuto
-            }
+                _delayMinutos = 1;
 
             _logger.LogInformation(
                 "Job configurado -> Hora: {hora}:{minuto}, Delay: {horas}h {min}m",
@@ -76,22 +75,23 @@ namespace PUI.Infrastructure.Jobs
 
         private async Task EsperarProximaEjecucion(CancellationToken stoppingToken)
         {
-            var ahora = DateTime.Now;
+            using var scope = _scopeFactory.CreateScope();
+            var time = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
+
+            var ahoraLocal = time.NowLocal;
 
             var proxima = new DateTime(
-                ahora.Year,
-                ahora.Month,
-                ahora.Day,
+                ahoraLocal.Year,
+                ahoraLocal.Month,
+                ahoraLocal.Day,
                 _horaEjecucion,
                 _minutoEjecucion,
                 0);
 
-            if (ahora >= proxima)
-            {
+            if (ahoraLocal >= proxima)
                 proxima = proxima.AddDays(1);
-            }
 
-            var delay = proxima - ahora;
+            var delay = proxima - ahoraLocal;
 
             _logger.LogInformation(
                 "Primera ejecución en: {fecha} (en {minutos} minutos)",
@@ -105,52 +105,94 @@ namespace PUI.Infrastructure.Jobs
         {
             using var scope = _scopeFactory.CreateScope();
 
-            var repository = scope.ServiceProvider.GetRequiredService<IReportesRepository>();
+            var reportesRepo = scope.ServiceProvider.GetRequiredService<IReportesRepository>();
+            var procesosRepo = scope.ServiceProvider.GetRequiredService<IProcesoBusquedaRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var time = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
 
-            var ahora = DateTime.UtcNow;
+            var proceso = ProcesoBusqueda.CrearContinua();
 
-            var reportes = await repository.ObtenerParaBusquedaContinua(60);
-
-            if (!reportes.Any())
+            try
             {
-                _logger.LogInformation("No hay reportes pendientes");
-                return;
+                // 1. Guardar inicio del proceso
+                await procesosRepo.Agregar(proceso);
+                await unitOfWork.Persistir();
+
+                var ahoraUtc = time.UtcNow;
+
+                // 2. Obtener reportes
+                var reportes = await reportesRepo.ObtenerParaBusquedaContinua(60);
+
+                if (!reportes.Any())
+                {
+                    _logger.LogInformation("No hay reportes pendientes");
+
+                    proceso.Completar();
+                    await unitOfWork.Persistir();
+                    return;
+                }
+
+                _logger.LogInformation("Procesando {count} reportes", reportes.Count);
+
+                foreach (var reporte in reportes)
+                {
+                    try
+                    {
+                        var fechaInicio = reporte.FechaUltimaBusqueda ?? reporte.FechaActivacion;
+
+                        // NORMALIZAR A UTC
+                        if (fechaInicio.Kind == DateTimeKind.Unspecified)
+                        {
+                            fechaInicio = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
+                        }
+
+                        var fechaFin = ahoraUtc;
+
+                        // SOLO PARA LOG (hora Cancún correcta)
+                        var inicioLocal = time.ConvertToLocal(fechaInicio);
+                        var finLocal = time.ConvertToLocal(fechaFin);
+
+                        _logger.LogInformation(
+                            "Procesando reporte {id} desde {inicio} hasta {fin}",
+                            reporte.Id,
+                            inicioLocal,
+                            finLocal);
+
+                        // Simulación
+                        await Task.Delay(10, stoppingToken);
+
+                        proceso.IncrementarEvaluados();
+
+                        // Control en UTC
+                        reporte.ActualizarFechaUltimaBusqueda(fechaFin);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error procesando reporte {id}", reporte.Id);
+                    }
+                }
+
+                proceso.Completar();
+                await unitOfWork.Persistir();
+
+                _logger.LogInformation(
+                    "Proceso completado. Evaluados: {eval}",
+                    proceso.RegistrosEvaluados);
             }
-
-            _logger.LogInformation("Procesando {count} reportes", reportes.Count);
-
-            int registrosEvaluados = 0;
-
-            foreach (var reporte in reportes)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error crítico en ejecución del proceso");
+
                 try
                 {
-                    var fechaInicio = reporte.FechaUltimaBusqueda ?? reporte.FechaActivacion;
-                    var fechaFin = ahora;
-
-                    _logger.LogInformation(
-                        "Procesando reporte {id} desde {inicio} hasta {fin}",
-                        reporte.Id, fechaInicio, fechaFin);
-
-                    await Task.Delay(10, stoppingToken);
-
-                    reporte.ActualizarFechaUltimaBusqueda(fechaFin);
-
-                    registrosEvaluados++;
+                    proceso.MarcarError(ex.ToString());
+                    await unitOfWork.Persistir();
                 }
-                catch (Exception ex)
+                catch (Exception innerEx)
                 {
-                    _logger.LogError(ex, "Error procesando reporte {id}", reporte.Id);
+                    _logger.LogError(innerEx, "Error guardando estado de fallo del proceso");
                 }
             }
-
-            await unitOfWork.Persistir();
-
-            _logger.LogInformation(
-                "Proceso completado. Evaluados: {eval}",
-                registrosEvaluados);
         }
     }
-
 }

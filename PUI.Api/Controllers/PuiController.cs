@@ -5,6 +5,7 @@ using PUI.Api.DTOs.Reportes;
 using PUI.Application.UseCases.Auth.Commands.LoginUsuario;
 using PUI.Application.UseCases.Auth.Dtos;
 using PUI.Application.UseCases.Reportes.Commands.ActivarReporte;
+using PUI.Application.UseCases.Reportes.Commands.DesactivarReporte;
 using PUI.Application.UseCases.Reportes.Dtos;
 using PUI.Application.UseCases.Reportes.Queries.ObtenerListado;
 using PUI.Application.Utils.Mediator;
@@ -75,6 +76,23 @@ namespace PUI.Api.Controllers
                 CodigoPostal = dto.CodigoPostal,
                 MunicipioOAlcaldia = dto.MunicipioOAlcaldia,
                 EntidadFederativa = dto.EntidadFederativa
+            };
+
+            var id = await mediator.Send(command);
+
+            return Ok(new { id });
+        }
+
+
+
+        [Authorize]
+        [HttpPost("desactivar-reporte")]
+        public async Task<IActionResult> DesactivarReporte([FromBody] DesactivarReportePUIDto dto)
+        {
+            var command = new DesactivarReporteCommand
+            {
+                Id = dto.Id,
+              
             };
 
             var id = await mediator.Send(command);

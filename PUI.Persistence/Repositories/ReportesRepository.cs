@@ -3,6 +3,7 @@ using PUI.Application.Interfaces.Repositories;
 using PUI.Domain.Entities;
 using PUI.Domain.Enums;
 using PUI.Persistencia;
+using System.ComponentModel;
 
 namespace PUI.Persistence.Repositories
 {
@@ -26,6 +27,11 @@ namespace PUI.Persistence.Repositories
                 .OrderBy(r => r.FechaUltimaBusqueda)
                 .Take(100)
                 .ToListAsync();
+        }
+
+        public async Task<Reporte?> ObtenerPorFolioPUI(string folioPUI)
+        {
+            return await _context.Reportes.FirstOrDefaultAsync(r => r.FolioPui == folioPUI);
         }
     }
 }
