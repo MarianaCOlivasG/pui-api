@@ -10,7 +10,6 @@ namespace PUI.Identity
         {
         }
 
-        // DbSet de usuarios
         public DbSet<Usuario> Usuarios => Set<Usuario>();
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -19,27 +18,63 @@ namespace PUI.Identity
 
             builder.Entity<Usuario>(entity =>
             {
-                // Nombre de la tabla
                 entity.ToTable("pui_usuarios");
 
-                // Clave primaria
                 entity.HasKey(u => u.Id);
 
-                // Mapear propiedades a columnas
                 entity.Property(u => u.Id)
                     .HasColumnName("id_usuario")
-                    .HasMaxLength(36)
-                    .IsRequired();
+                    .HasMaxLength(36);
 
                 entity.Property(u => u.UserName)
                     .HasColumnName("usuario")
                     .HasMaxLength(100)
                     .IsRequired();
 
+                entity.Property(u => u.NormalizedUserName)
+                    .HasColumnName("usuario_normalizado")
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(u => u.Email)
+                    .HasColumnName("email")
+                    .HasMaxLength(150);
+
+                entity.Property(u => u.NormalizedEmail)
+                    .HasColumnName("email_normalizado")
+                    .HasMaxLength(150);
+
                 entity.Property(u => u.PasswordHash)
                     .HasColumnName("pass")
                     .HasMaxLength(255)
                     .IsRequired();
+
+                entity.Property(u => u.Activo)
+                    .HasColumnName("activo")
+                    .HasDefaultValue(true);
+
+                entity.Property(u => u.IntentosFallidos)
+                    .HasColumnName("intentos_fallidos")
+                    .HasDefaultValue(0);
+
+                entity.Property(u => u.BloqueoHasta)
+                    .HasColumnName("bloqueo_hasta");
+
+                entity.Property(u => u.UltimoLogin)
+                    .HasColumnName("ultimo_login");
+
+                entity.Property(u => u.FechaCreacion)
+                    .HasColumnName("fecha_creacion")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(u => u.FechaActualizacion)
+                    .HasColumnName("fecha_actualizacion");
+
+                // índices importantes
+                entity.HasIndex(u => u.NormalizedUserName)
+                    .IsUnique();
+
+                entity.HasIndex(u => u.NormalizedEmail);
             });
         }
     }

@@ -3,13 +3,25 @@
 CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_usuarios (
     id_usuario VARCHAR(36) NOT NULL COMMENT 'Identificador único del usuario (UUID)',
     usuario VARCHAR(100) NOT NULL COMMENT 'Nombre de usuario para login',
-    pass VARCHAR(255) NOT NULL COMMENT 'Contraseña (hash recomendable)',
+    usuario_normalizado VARCHAR(100) NOT NULL COMMENT 'Usuario en mayúsculas para búsquedas rápidas',
+    email VARCHAR(150) NULL COMMENT 'Correo del usuario',
+    email_normalizado VARCHAR(150) NULL COMMENT 'Correo normalizado para búsquedas',
+    pass VARCHAR(255) NOT NULL COMMENT 'Contraseña hasheada',
+    activo BOOLEAN DEFAULT TRUE COMMENT 'Permite activar o desactivar la cuenta',
+    intentos_fallidos INT DEFAULT 0 COMMENT 'Intentos de login fallidos',
+    bloqueo_hasta DATETIME NULL COMMENT 'Fecha hasta la cual el usuario está bloqueado',
+    ultimo_login DATETIME NULL COMMENT 'Última vez que el usuario inició sesión',
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del usuario',
-    fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Última actualización',
-    estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO' COMMENT 'Estado del usuario',
+    fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP COMMENT 'Última actualización',
     PRIMARY KEY (id_usuario),
-    UNIQUE INDEX idx_usuario_unique (usuario)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Maestro de usuarios PUI';
+    UNIQUE INDEX idx_usuario_unique (usuario),
+    UNIQUE INDEX idx_usuario_normalizado (usuario_normalizado),
+    INDEX idx_email_normalizado (email_normalizado)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 
+COLLATE=utf8mb4_unicode_ci 
+COMMENT='Listado de usuarios PUI';
 
 
 -- 2. TABLA: pui_reportes 
