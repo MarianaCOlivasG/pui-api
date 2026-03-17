@@ -110,6 +110,9 @@ namespace PUI.Persistence.Configurations
                 .HasConversion(encryptString)
                 .HasMaxLength(100);
 
+            builder.Property(r => r.FechaUltimaBusqueda)
+                .HasColumnName("fecha_ultima_busqueda");
+
             // CURP
             builder.OwnsOne(r => r.Curp, curp =>
             {

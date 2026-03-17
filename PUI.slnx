@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/Infrastructure/">
     <Project Path="PUI.Identity/PUI.Identity.csproj" Id="2e95788f-4ae2-438a-917d-f3d8654e8976" />
+    <Project Path="PUI.Infrastructure/PUI.Infrastructure.csproj" Id="e4758dfe-3754-4308-92ee-8ead0b437c7f" />
     <Project Path="PUI.Persistence/PUI.Persistence.csproj" Id="25897802-cb88-4d88-9e04-08b7b48111cd" />
   </Folder>
 </Solution>

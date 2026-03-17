@@ -35,6 +35,7 @@ namespace PUI.Domain.Entities
         public Curp Curp { get; private set; } = null!;
         public Sexo? Sexo { get; private set; }
         public EstatusReporte Estatus { get; private set; }
+        public DateTime? FechaUltimaBusqueda { get; private set; }
 
         private Reporte() { }
 
@@ -113,5 +114,12 @@ namespace PUI.Domain.Entities
             if (string.IsNullOrWhiteSpace(lugarNacimiento))
                 throw new ExcepcionReglaNegocio($"El campo '{nameof(LugarNacimiento)}' es requerido.");
         }
+
+        public void ActualizarFechaUltimaBusqueda(DateTime fecha)
+        {
+            FechaUltimaBusqueda = fecha;
+        }
+
+
     }
 }

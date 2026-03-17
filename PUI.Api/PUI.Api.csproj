@@ -16,6 +16,7 @@
 		<ProjectReference Include="..\PUI.Application\PUI.Application.csproj" />
 		<ProjectReference Include="..\PUI.Domain\PUI.Domain.csproj" />
 		<ProjectReference Include="..\PUI.Identity\PUI.Identity.csproj" />
+		<ProjectReference Include="..\PUI.Infrastructure\PUI.Infrastructure.csproj" />
 		<ProjectReference Include="..\PUI.Persistence\PUI.Persistence.csproj" />
 	</ItemGroup>
 

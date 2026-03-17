@@ -1,7 +1,9 @@
+using DientesLimpios.Persistencia;
 using PUI.Api.Configuration;
 using PUI.Api.Middlewares;
 using PUI.Application;
 using PUI.Identity;
+using PUI.Infrastructure.Jobs;
 using PUI.Persistencia;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +14,11 @@ builder.Services.AddOpenApi();
 // Servicios
 builder.Services.AgregarServiciosDeAplicacion();
 builder.Services.AgregarServiciosDePersistencia(builder.Configuration);
+builder.Services.AgregarServiciosDeInfraestructure();
 builder.Services.AgregarServiciosDeIdentity(builder.Configuration);
+
+// JOB
+builder.Services.AddHostedService<BusquedaContinuaJob>();
 
 // CORS
 var origenesPermitidos = builder.Configuration

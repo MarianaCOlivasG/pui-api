@@ -47,14 +47,22 @@ CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_reportes (
     entidad_federativa VARCHAR(100) NULL COMMENT 'Estado de residencia',
     estatus VARCHAR(20) DEFAULT 'ACTIVO' COMMENT 'ACTIVO o FINALIZADO',
     fecha_activacion DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha activacion PUI',
+    fecha_ultima_busqueda DATETIME NULL COMMENT 'Ultima vez que se ejecuto la busqueda continua',
     fecha_desactivacion DATETIME NULL DEFAULT NULL COMMENT 'Fecha cierre de reporte',
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha registro tecnico local',
     fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Ultima modificacion',
     PRIMARY KEY (id_reporte),
     UNIQUE INDEX idx_folio_unique (folio_pui),
     INDEX idx_curp_search (curp),
-    INDEX idx_estatus_pui (estatus)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Listado de reportes PUI';
+    INDEX idx_estatus_pui (estatus),
+    INDEX idx_busqueda (estatus, fecha_ultima_busqueda)
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 
+COLLATE=utf8mb4_unicode_ci 
+COMMENT='Listado de reportes PUI';
+
+
+
 
 -- 3. TABLA: pui_coincidencias (Relacionada a Reportes)
 CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_coincidencias (
