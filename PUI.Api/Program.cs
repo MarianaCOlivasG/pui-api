@@ -1,4 +1,4 @@
-using DientesLimpios.Persistencia;
+using PUI.Persistencia;
 using PUI.Api.Configuration;
 using PUI.Api.Middlewares;
 using PUI.Application;

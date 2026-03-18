@@ -3,12 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PUI.Application.Interfaces.ApiPUI;
-using PUI.Application.Interfaces.Busqueda;
 using PUI.Application.Interfaces.Servicios;
+using PUI.Application.UseCases;
 using PUI.Infrastructure.ApiPUI;
 using PUI.Infrastructure.Services;
 
-namespace DientesLimpios.Persistencia
+namespace PUI.Persistencia
 {
     public static class InfrastructureServiceRegistration
     {
@@ -17,15 +17,19 @@ namespace DientesLimpios.Persistencia
 
             services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
-            services.AddScoped<IBusquedaService, BusquedaService>();
+            services.Configure<ApiPuiSettings>(configuration.GetSection("ApiPui"));
 
             services.Configure<ApiPuiSettings>(configuration.GetSection("ApiPui"));
 
             services.AddHttpClient<IApiPuiService, ApiPuiService>((sp, client) =>
             {
                 var settings = sp.GetRequiredService<IOptions<ApiPuiSettings>>().Value;
+
+                if (string.IsNullOrEmpty(settings.BaseUrl)) throw new Exception("ApiPui:BaseUrl no está configurada");
+
                 client.BaseAddress = new Uri(settings.BaseUrl);
             });
+
 
             return services;
         }

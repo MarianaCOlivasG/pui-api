@@ -28,8 +28,6 @@ namespace PUI.Application
 
             services.AddValidatorsFromAssemblies(new[] { typeof(RegistroServiciosDeAplicacion).Assembly });
 
-
-
             return services;
         }
 

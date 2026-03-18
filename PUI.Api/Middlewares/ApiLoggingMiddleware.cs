@@ -45,7 +45,7 @@ namespace PUI.Api.Middlewares
                 string responseBody = await new StreamReader(context.Response.Body).ReadToEndAsync();
                 context.Response.Body.Seek(0, SeekOrigin.Begin);
 
-                // Imprimir en consola
+               
                 _logger.LogInformation("==== API LOG ====");
                 _logger.LogInformation("Endpoint: {Endpoint}", context.Request.Path);
                 _logger.LogInformation("Método: {Metodo}", context.Request.Method);
