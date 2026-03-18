@@ -22,8 +22,11 @@ namespace PUI.Persistence.Repositories
             var limite = DateTime.UtcNow.AddMinutes(-minutos);
 
             return await _context.Reportes
-                .Where(r => r.Estatus == EstatusReporte.Activo &&
-                       (r.FechaUltimaBusqueda == null || r.FechaUltimaBusqueda < limite))
+                .Where(r =>
+                    r.Estatus == EstatusReporte.Activo &&
+                    r.FechaDesactivacion == null &&
+                    (r.FechaUltimaBusqueda == null || r.FechaUltimaBusqueda < limite)
+                )
                 .OrderBy(r => r.FechaUltimaBusqueda)
                 .Take(100)
                 .ToListAsync();

@@ -53,7 +53,7 @@ namespace PUI.Infrastructure.Identity.Services
                     return e.Description;
                 }).ToArray();
 
-                throw new IdentityValidationException(errores);
+                throw new ExcepcionValidacionIdentity(errores);
             }
 
             return ConstruirToken(usuario);
@@ -64,15 +64,15 @@ namespace PUI.Infrastructure.Identity.Services
             var usuario = await userManager.FindByNameAsync(dto.UserName);
 
             if (usuario == null)
-                throw new IdentityValidationException(new[] { "Credenciales incorrectas" });
+                throw new ExcepcionValidacionIdentity(new[] { "Credenciales incorrectas" });
 
             // usuario desactivado
             if (!usuario.Activo)
-                throw new IdentityValidationException(new[] { "La cuenta está desactivada." });
+                throw new ExcepcionValidacionIdentity(new[] { "La cuenta está desactivada." });
 
             // usuario bloqueado
             if (usuario.BloqueoHasta != null && usuario.BloqueoHasta > DateTime.UtcNow)
-                throw new IdentityValidationException(new[] { "La cuenta está temporalmente bloqueada." });
+                throw new ExcepcionValidacionIdentity(new[] { "La cuenta está temporalmente bloqueada." });
 
             var validPassword = await userManager.CheckPasswordAsync(usuario, dto.Password!);
 
@@ -88,7 +88,7 @@ namespace PUI.Infrastructure.Identity.Services
 
                 await userManager.UpdateAsync(usuario);
 
-                throw new IdentityValidationException(new[] { "Credenciales incorrectas" });
+                throw new ExcepcionValidacionIdentity(new[] { "Credenciales incorrectas" });
             }
 
             // reset intentos

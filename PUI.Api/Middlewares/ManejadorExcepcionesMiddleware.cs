@@ -1,8 +1,10 @@
-using System.Net;
-using System.Text.Json;
 using PUI.Domain.Exceptions;
 using PUI.Infrastructure.Identity.Exceptions;
+using PUI.Infrastructure.Infrastructure.Exceptions;
 using PUI.Persistence.Exceptions;
+using System.Net;
+using System.Net.Mail;
+using System.Text.Json;
 
 namespace PUI.Api.Middlewares
 {
@@ -33,82 +35,98 @@ namespace PUI.Api.Middlewares
 
         private Task ManejarExcepcion(HttpContext context, Exception excepcion)
         {
-            HttpStatusCode httpStatusCode;
-            object resultado;
+            var traceId = context.TraceIdentifier;
+
+            HttpStatusCode status;
+            string mensaje;
+            string codigo = "ERROR_GENERAL";
+            object? errores = null;
 
             switch (excepcion)
             {
                 case ExcepcionNoEncontrado:
-                    httpStatusCode = HttpStatusCode.NotFound;
-                    resultado = new
-                    {
-                        mensaje = "El recurso solicitado no fue encontrado.",
-                        traceId = context.TraceIdentifier
-                    };
+                    status = HttpStatusCode.NotFound;
+                    mensaje = "Recurso no encontrado.";
+                    codigo = "NOT_FOUND";
                     break;
 
                 case ExcepcionDeValidacion ex:
-                    httpStatusCode = HttpStatusCode.BadRequest;
-                    resultado = new
-                    {
-                        mensaje = "Los datos enviados no son válidos.",
-                        errores = ex.ErroresDeValidacion,
-                        traceId = context.TraceIdentifier
-                    };
+                    status = HttpStatusCode.BadRequest;
+                    mensaje = "Error en la solicitud.";
+                    codigo = "VALIDATION_ERROR";
+                    errores = ex.ErroresDeValidacion;
                     break;
 
                 case ExcepcionReglaNegocio ex:
-                    httpStatusCode = HttpStatusCode.BadRequest;
-                    resultado = new
-                    {
-                        mensaje = ex.Message,
-                        traceId = context.TraceIdentifier
-                    };
+                    status = HttpStatusCode.BadRequest;
+                    mensaje = ex.Message;
+                    codigo = "BUSINESS_RULE";
                     break;
 
                 case ExcepcionDePersistencia ex:
-                    httpStatusCode = HttpStatusCode.BadRequest;
+                    status = HttpStatusCode.InternalServerError;
+                    mensaje = "Error al procesar la información.";
+                    codigo = "PERSISTENCE_ERROR";
 
                     _logger.LogError(ex,
                         "Error de persistencia. Código: {Codigo} Detalle: {Detalle}",
                         ex.CodigoError,
                         ex.Detalle);
-
-                    resultado = new
-                    {
-                        mensaje = "No fue posible guardar la información. Intente nuevamente.",
-                        traceId = context.TraceIdentifier
-                    };
                     break;
-                    
-                case IdentityValidationException ex:
-                    httpStatusCode = HttpStatusCode.BadRequest;
-                    resultado = new
-                    {
-                        mensaje = "Error de validación de identidad.",
-                        errores = ex.Errores,
-                        traceId = context.TraceIdentifier
-                    };
+
+                case ExcepcionValidacionIdentity ex:
+                    status = HttpStatusCode.BadRequest;
+                    mensaje = "Error de validación de identidad.";
+                    codigo = "IDENTITY_VALIDATION";
+                    errores = ex.Errores;
+                    break;
+
+                case UnauthorizedAccessException:
+                    status = HttpStatusCode.Unauthorized;
+                    mensaje = "Falta o falla de autenticación.";
+                    codigo = "UNAUTHORIZED";
+                    break;
+
+                case TimeoutException:
+                    status = HttpStatusCode.GatewayTimeout;
+                    mensaje = "El servidor tardó demasiado en responder.";
+                    codigo = "TIMEOUT";
+                    break;
+
+                case ApiPuiException ex:
+                    status = (HttpStatusCode)ex.StatusCode;
+                    codigo = string.IsNullOrEmpty(ex.Codigo) ? "PUI_ERROR" : ex.Codigo;
+                    mensaje = $"Error en servicio externo (PUI): {ex.Message}";
+                    errores = ex.Errores;
+                    _logger.LogWarning(ex,
+                        "Error en API PUI. StatusCode: {StatusCode}, Codigo: {Codigo}",
+                        ex.StatusCode,
+                        ex.Codigo);
+
                     break;
 
                 default:
-                    httpStatusCode = HttpStatusCode.InternalServerError;
+                    status = HttpStatusCode.InternalServerError;
+                    mensaje = "Error interno del servidor.";
+                    codigo = "INTERNAL_ERROR";
 
-                    _logger.LogError(excepcion,
-                        "Error inesperado en el servidor");
-
-                    resultado = new
-                    {
-                        mensaje = "Ocurrió un error inesperado. Intente más tarde.",
-                        traceId = context.TraceIdentifier
-                    };
+                    _logger.LogError(excepcion, "Error inesperado");
                     break;
             }
 
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)httpStatusCode;
+            var response = new
+            {
+                exito = false,
+                codigo,
+                mensaje,
+                errores,
+                traceId
+            };
 
-            var json = JsonSerializer.Serialize(resultado);
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = (int)status;
+
+            var json = JsonSerializer.Serialize(response);
 
             return context.Response.WriteAsync(json);
         }

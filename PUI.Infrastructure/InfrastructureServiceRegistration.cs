@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PUI.Application.Interfaces.ApiPUI;
 using PUI.Application.Interfaces.Servicios;
-using PUI.Application.UseCases;
 using PUI.Infrastructure.ApiPUI;
 using PUI.Infrastructure.Services;
 

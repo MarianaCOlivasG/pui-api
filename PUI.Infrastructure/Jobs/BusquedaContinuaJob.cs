@@ -2,10 +2,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PUI.Application.Interfaces.ApiPUI;
 using PUI.Application.Interfaces.Persistence;
 using PUI.Application.Interfaces.Repositories;
 using PUI.Application.Interfaces.Servicios;
 using PUI.Domain.Entities;
+using PUI.Domain.Enums;
 
 namespace PUI.Infrastructure.Jobs
 {
@@ -55,6 +57,10 @@ namespace PUI.Infrastructure.Jobs
                 try
                 {
                     await EjecutarProceso(stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogWarning("Ejecución cancelada");
                 }
                 catch (Exception ex)
                 {
@@ -109,18 +115,17 @@ namespace PUI.Infrastructure.Jobs
             var procesosRepo = scope.ServiceProvider.GetRequiredService<IProcesoBusquedaRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var time = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
+            var apiPui = scope.ServiceProvider.GetRequiredService<IApiPuiService>();
 
             var proceso = ProcesoBusqueda.CrearContinua();
 
             try
             {
-                // 1. Guardar inicio del proceso
                 await procesosRepo.Agregar(proceso);
                 await unitOfWork.Persistir();
 
                 var ahoraUtc = time.UtcNow;
 
-                // 2. Obtener reportes
                 var reportes = await reportesRepo.ObtenerParaBusquedaContinua(60);
 
                 if (!reportes.Any())
@@ -136,19 +141,27 @@ namespace PUI.Infrastructure.Jobs
 
                 foreach (var reporte in reportes)
                 {
+                    if (stoppingToken.IsCancellationRequested)
+                        break;
+
                     try
                     {
+                        if (reporte.Estatus != EstatusReporte.Activo)
+                        {
+                            _logger.LogInformation(
+                                "Reporte {id} omitido porque no está activo",
+                                reporte.Id);
+
+                            continue;
+                        }
+
                         var fechaInicio = reporte.FechaUltimaBusqueda ?? reporte.FechaActivacion;
 
-                        // NORMALIZAR A UTC
                         if (fechaInicio.Kind == DateTimeKind.Unspecified)
-                        {
                             fechaInicio = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
-                        }
 
                         var fechaFin = ahoraUtc;
 
-                        // SOLO PARA LOG (hora Cancún correcta)
                         var inicioLocal = time.ConvertToLocal(fechaInicio);
                         var finLocal = time.ConvertToLocal(fechaFin);
 
@@ -158,13 +171,16 @@ namespace PUI.Infrastructure.Jobs
                             inicioLocal,
                             finLocal);
 
-                        // Simulación
-                        await Task.Delay(10, stoppingToken);
+                        await ProcesarBusquedaAsync(reporte, apiPui, stoppingToken);
 
                         proceso.IncrementarEvaluados();
 
-                        // Control en UTC
                         reporte.ActualizarFechaUltimaBusqueda(fechaFin);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.LogWarning("Procesamiento cancelado");
+                        break;
                     }
                     catch (Exception ex)
                     {
@@ -193,6 +209,15 @@ namespace PUI.Infrastructure.Jobs
                     _logger.LogError(innerEx, "Error guardando estado de fallo del proceso");
                 }
             }
+        }
+
+        private async Task ProcesarBusquedaAsync(
+            Reporte reporte,
+            IApiPuiService apiPui,
+            CancellationToken stoppingToken)
+        {
+            // TODO: Implementar la busqueda real 
+            await Task.CompletedTask;
         }
     }
 }
