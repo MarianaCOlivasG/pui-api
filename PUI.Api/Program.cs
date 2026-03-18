@@ -1,10 +1,12 @@
-using PUI.Persistencia;
 using PUI.Api.Configuration;
+using PUI.Api.Filters;
 using PUI.Api.Middlewares;
 using PUI.Application;
 using PUI.Identity;
 using PUI.Infrastructure.Jobs;
 using PUI.Persistencia;
+using System.Text.Json.Serialization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,7 +38,17 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<SanitizeInputFilter>();
+});
+// No permitir campos extra en el body
+// .AddJsonOptions(options =>
+//{
+//    options.JsonSerializerOptions.UnmappedMemberHandling =
+//        JsonUnmappedMemberHandling.Disallow;
+//});
+
 builder.Services.AddApiValidation();
 
 var app = builder.Build();

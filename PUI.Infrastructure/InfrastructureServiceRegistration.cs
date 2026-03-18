@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PUI.Application.Interfaces.ApiPUI;
+using PUI.Application.Interfaces.Busqueda;
 using PUI.Application.Interfaces.Servicios;
 using PUI.Infrastructure.ApiPUI;
+using PUI.Infrastructure.Busqueda;
 using PUI.Infrastructure.Services;
 
 namespace PUI.Persistencia
@@ -13,8 +15,6 @@ namespace PUI.Persistencia
     {
         public static IServiceCollection AgregarServiciosDeInfraestructure(this IServiceCollection services, IConfiguration configuration)
         {
-
-            services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
             services.Configure<ApiPuiSettings>(configuration.GetSection("ApiPui"));
 
@@ -28,6 +28,10 @@ namespace PUI.Persistencia
 
                 client.BaseAddress = new Uri(settings.BaseUrl);
             });
+
+            services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+
+            services.AddScoped<IBusquedaService, BusquedaService>();
 
 
             return services;
