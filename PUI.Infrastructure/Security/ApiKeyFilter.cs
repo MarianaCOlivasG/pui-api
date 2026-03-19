@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using PUI.Application.Security;
+using PUI.Application.Interfaces.Security;
 using System;
 using System.Collections.Generic;
 using System.Text;

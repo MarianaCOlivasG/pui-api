@@ -6,21 +6,30 @@ using PUI.Application.Interfaces.ApiPUI;
 using PUI.Application.Interfaces.Persistence;
 using PUI.Application.Interfaces.Repositories;
 using PUI.Application.Interfaces.Servicios;
+using PUI.Application.Utils.Paginacion;
 using PUI.Domain.Entities;
 using PUI.Domain.Enums;
 
 namespace PUI.Infrastructure.Jobs
 {
+    // BackgroundService permite ejecutar procesos en segundo plano dentro de ASP.NET Core
     public class BusquedaContinuaJob : BackgroundService
     {
+        // Factory para crear scopes (inyección de dependencias por ejecución)
         private readonly IServiceScopeFactory _scopeFactory;
+
+        // Logger para registrar eventos del job
         private readonly ILogger<BusquedaContinuaJob> _logger;
 
+        // Hora específica de primera ejecución
         private readonly int _horaEjecucion;
         private readonly int _minutoEjecucion;
+
+        // Delay entre ejecuciones posteriores
         private readonly int _delayHoras;
         private readonly int _delayMinutos;
 
+        // Constructor donde se leen configuraciones del appsettings
         public BusquedaContinuaJob(
             IServiceScopeFactory scopeFactory,
             IConfiguration configuration,
@@ -29,15 +38,19 @@ namespace PUI.Infrastructure.Jobs
             _scopeFactory = scopeFactory;
             _logger = logger;
 
+            // Hora inicial del job
             _horaEjecucion = configuration.GetValue<int>("Jobs:BusquedaContinua:HoraEjecucion");
             _minutoEjecucion = configuration.GetValue<int>("Jobs:BusquedaContinua:MinutoEjecucion");
 
+            // Delay entre ejecuciones
             _delayHoras = configuration.GetValue<int>("Jobs:BusquedaContinua:DelayHorasEjecucion");
             _delayMinutos = configuration.GetValue<int>("Jobs:BusquedaContinua:DelayMinutosEjecucion");
 
+            // Si no hay delay configurado, usar 1 minuto como fallback
             if (_delayHoras == 0 && _delayMinutos == 0)
                 _delayMinutos = 1;
 
+            // Log de configuración inicial
             _logger.LogInformation(
                 "Job configurado -> Hora: {hora}:{minuto}, Delay: {horas}h {min}m",
                 _horaEjecucion,
@@ -46,27 +59,34 @@ namespace PUI.Infrastructure.Jobs
                 _delayMinutos);
         }
 
+        // Método principal que se ejecuta al iniciar el servicio
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("BusquedaContinuaJob iniciado");
 
+            // Espera hasta la hora configurada antes de iniciar
             await EsperarProximaEjecucion(stoppingToken);
 
+            // Loop infinito hasta que el servicio se detenga
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
+                    // Ejecuta el proceso principal
                     await EjecutarProceso(stoppingToken);
                 }
                 catch (OperationCanceledException)
                 {
+                    // Se cancela el proceso si se detiene el servicio
                     _logger.LogWarning("Ejecución cancelada");
                 }
                 catch (Exception ex)
                 {
+                    // Manejo de errores generales
                     _logger.LogError(ex, "Error general en el job");
                 }
 
+                // Calcula el delay entre ejecuciones
                 var delay = TimeSpan.FromHours(_delayHoras)
                            + TimeSpan.FromMinutes(_delayMinutos);
 
@@ -75,17 +95,22 @@ namespace PUI.Infrastructure.Jobs
                     _delayHoras,
                     _delayMinutos);
 
+                // Espera antes de la siguiente ejecución
                 await Task.Delay(delay, stoppingToken);
             }
         }
 
+        // Espera hasta la siguiente ejecución programada (hora específica del día)
         private async Task EsperarProximaEjecucion(CancellationToken stoppingToken)
         {
             using var scope = _scopeFactory.CreateScope();
+
+            // Servicio para manejar fechas (importante para pruebas y consistencia)
             var time = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
 
             var ahoraLocal = time.NowLocal;
 
+            // Se construye la próxima fecha de ejecución
             var proxima = new DateTime(
                 ahoraLocal.Year,
                 ahoraLocal.Month,
@@ -94,9 +119,11 @@ namespace PUI.Infrastructure.Jobs
                 _minutoEjecucion,
                 0);
 
+            // Si ya pasó la hora, se programa para el siguiente día
             if (ahoraLocal >= proxima)
                 proxima = proxima.AddDays(1);
 
+            // Calcula cuánto tiempo falta
             var delay = proxima - ahoraLocal;
 
             _logger.LogInformation(
@@ -104,30 +131,39 @@ namespace PUI.Infrastructure.Jobs
                 proxima,
                 delay.TotalMinutes);
 
+            // Espera hasta la hora programada
             await Task.Delay(delay, stoppingToken);
         }
 
+        // Proceso principal del job
         private async Task EjecutarProceso(CancellationToken stoppingToken)
         {
             using var scope = _scopeFactory.CreateScope();
 
+            // Se obtienen dependencias
             var reportesRepo = scope.ServiceProvider.GetRequiredService<IReportesRepository>();
             var procesosRepo = scope.ServiceProvider.GetRequiredService<IProcesoBusquedaRepository>();
+            var notificacionesPamRepo = scope.ServiceProvider.GetRequiredService<INotificacionesPamRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var time = scope.ServiceProvider.GetRequiredService<IDateTimeProvider>();
             var apiPui = scope.ServiceProvider.GetRequiredService<IApiPuiService>();
 
+            // Se crea un nuevo proceso de búsqueda
             var proceso = ProcesoBusqueda.CrearContinua();
 
             try
             {
+                // Se guarda el inicio del proceso
                 await procesosRepo.Agregar(proceso);
                 await unitOfWork.Persistir();
 
+                // Tiempo actual en UTC (referencia única para todo el proceso)
                 var ahoraUtc = time.UtcNow;
 
+                // Se obtienen reportes que necesitan búsqueda
                 var reportes = await reportesRepo.ObtenerParaBusquedaContinua(60);
 
+                // Si no hay reportes, se termina el proceso
                 if (!reportes.Any())
                 {
                     _logger.LogInformation("No hay reportes pendientes");
@@ -139,6 +175,7 @@ namespace PUI.Infrastructure.Jobs
 
                 _logger.LogInformation("Procesando {count} reportes", reportes.Count);
 
+                // Itera cada reporte
                 foreach (var reporte in reportes)
                 {
                     if (stoppingToken.IsCancellationRequested)
@@ -146,41 +183,28 @@ namespace PUI.Infrastructure.Jobs
 
                     try
                     {
+                        // Solo procesa reportes activos
                         if (reporte.Estatus != EstatusReporte.Activo)
                         {
                             _logger.LogInformation(
                                 "Reporte {id} omitido porque no está activo",
                                 reporte.Id);
-
                             continue;
                         }
 
-                        var fechaInicio = reporte.FechaUltimaBusqueda ?? reporte.FechaActivacion;
+                        // Ejecuta la búsqueda para ese reporte
+                        await ProcesarBusquedaAsync(
+                            reporte,
+                            apiPui,
+                            notificacionesPamRepo,
+                            ahoraUtc,
+                            stoppingToken);
 
-                        if (fechaInicio.Kind == DateTimeKind.Unspecified)
-                            fechaInicio = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
-
-                        var fechaFin = ahoraUtc;
-
-                        var inicioLocal = time.ConvertToLocal(fechaInicio);
-                        var finLocal = time.ConvertToLocal(fechaFin);
-
-                        _logger.LogInformation(
-                            "Procesando reporte {id} desde {inicio} hasta {fin}",
-                            reporte.Id,
-                            inicioLocal,
-                            finLocal);
-
-                        await ProcesarBusquedaAsync(reporte, apiPui, stoppingToken);
-
+                        // Incrementa contador de evaluados
                         proceso.IncrementarEvaluados();
 
-                        reporte.ActualizarFechaUltimaBusqueda(fechaFin);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger.LogWarning("Procesamiento cancelado");
-                        break;
+                        // Actualiza última búsqueda
+                        reporte.ActualizarFechaUltimaBusqueda(ahoraUtc);
                     }
                     catch (Exception ex)
                     {
@@ -188,6 +212,7 @@ namespace PUI.Infrastructure.Jobs
                     }
                 }
 
+                // Marca proceso como completado
                 proceso.Completar();
                 await unitOfWork.Persistir();
 
@@ -211,13 +236,70 @@ namespace PUI.Infrastructure.Jobs
             }
         }
 
+        // Método que realiza la búsqueda de coincidencias
         private async Task ProcesarBusquedaAsync(
             Reporte reporte,
             IApiPuiService apiPui,
+            INotificacionesPamRepository notificacionesPamRepo,
+            DateTime ahoraUtc,
             CancellationToken stoppingToken)
         {
-            // TODO: Implementar la busqueda real 
-            await Task.CompletedTask;
+            _logger.LogInformation("Reporte con CURP: {curp}", reporte.Curp.Valor);
+
+            // Determina fecha inicio de búsqueda
+            var fechaInicio = reporte.FechaUltimaBusqueda
+                ?? reporte.FechaDesaparicion
+                ?? reporte.FechaActivacion;
+
+            // Normaliza fecha a UTC si viene sin tipo
+            if (fechaInicio.Kind == DateTimeKind.Unspecified)
+                fechaInicio = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
+
+            // Limita búsqueda a máximo 30 días atrás para evitar consultas grandes
+            var limiteMaximo = ahoraUtc.AddDays(-30);
+
+            if (fechaInicio < limiteMaximo)
+                fechaInicio = limiteMaximo;
+
+            // Query filtrando por CURP y rango de fechas
+            var query = notificacionesPamRepo.Query()
+                .Where(n =>
+                    n.Curp.Valor == reporte.Curp.Valor &&
+                    n.FechaEvento != null &&
+                    n.FechaEvento >= fechaInicio &&
+                    n.FechaEvento <= ahoraUtc
+                );
+
+            int pagina = 1;
+            const int pageSize = 500;
+
+            while (true)
+            {
+                var resultado = await notificacionesPamRepo
+                    .ObtenerPaginado(query, new PaginacionDto(pagina, pageSize));
+
+                if (!resultado.Registros.Any())
+                    break;
+
+                foreach (var notificacion in resultado.Registros)
+                {
+                    if (stoppingToken.IsCancellationRequested)
+                        break;
+
+                    _logger.LogInformation(
+                        "Coincidencia encontrada: {id}",
+                        notificacion.Id);
+
+                    // Aquí iría la lógica real de notificación
+                    // await apiPui.NotificarCoincidencia(...)
+                }
+
+                // Si ya no hay más páginas, termina
+                if (resultado.Registros.Count < pageSize)
+                    break;
+
+                pagina++;
+            }
         }
     }
 }

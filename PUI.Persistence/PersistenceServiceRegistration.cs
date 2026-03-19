@@ -21,7 +21,9 @@ namespace PUI.Persistencia
             services.AddScoped<IReportesRepository, ReportesRepository>();
             services.AddScoped<IReportesHistorialRepository, ReportesHistorialRepository>();
             services.AddScoped<IEventosRepository, EventosRepository>();
+            services.AddScoped<ICoincidenciasRepository, CoincidenciasRepository>();
             services.AddScoped<IProcesoBusquedaRepository, ProcesoBusquedaRepository>();
+            services.AddScoped<INotificacionesPamRepository, NotificacionesPamRepository>();
             services.AddScoped<IApiLogsRepository, ApiLogsRepository>();
 
             services.AddScoped<IUnitOfWork, EFCoreUnitOfWork>();

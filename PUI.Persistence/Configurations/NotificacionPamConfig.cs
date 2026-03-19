@@ -20,25 +20,28 @@ namespace PUI.Persistence.Configurations
                 .HasMaxLength(36)
                 .IsRequired();
 
-            builder.OwnsOne(n => n.Curp, curp =>
+            // CURP
+            builder.OwnsOne(r => r.Curp, curp =>
             {
-                curp.Property(x => x.Valor)
+                curp.Property(c => c.Valor)
                     .HasColumnName("curp")
                     .HasConversion(encryptString)
-                    .HasMaxLength(255)
                     .IsRequired();
             });
 
             builder.Property(n => n.Nombre)
                 .HasColumnName("nombre")
+                .HasConversion(encryptString)
                 .HasMaxLength(255);
 
             builder.Property(n => n.PrimerApellido)
                 .HasColumnName("primer_apellido")
+                .HasConversion(encryptString)
                 .HasMaxLength(255);
 
             builder.Property(n => n.SegundoApellido)
                 .HasColumnName("segundo_apellido")
+                 .HasConversion(encryptString)
                 .HasMaxLength(255);
 
             builder.Property(n => n.TipoEvento)

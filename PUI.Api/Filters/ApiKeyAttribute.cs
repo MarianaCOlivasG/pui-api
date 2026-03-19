@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using PUI.Application.Security;
+using PUI.Application.Interfaces.Security;
 
 namespace PUI.Api.Filters
 {

@@ -6,8 +6,6 @@ using PUI.Application.UseCases.Auth.Commands.LoginUsuario;
 using PUI.Application.UseCases.Auth.Dtos;
 using PUI.Application.UseCases.Reportes.Commands.ActivarReporte;
 using PUI.Application.UseCases.Reportes.Commands.DesactivarReporte;
-using PUI.Application.UseCases.Reportes.Dtos;
-using PUI.Application.UseCases.Reportes.Queries.ObtenerListado;
 using PUI.Application.Utils.Mediator;
 
 namespace PUI.Api.Controllers
@@ -99,23 +97,6 @@ namespace PUI.Api.Controllers
 
             return Ok(new { message = "Registro de finalización de búsqueda histórica guardado correctamente" });
         }
-
-
-
-
-
-
-        [HttpGet]
-        public async Task<ActionResult<List<ReporteListadoDto>>> Get()
-        {
-            var query = new ObtenerListadoReportesQuery();
-
-            var result = await mediator.Send(query);
-
-            return result;
-
-        }
-
 
 
 

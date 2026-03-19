@@ -35,7 +35,7 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
 
                 var respuesta = await _repository.Agregar(reporte);
 
-                // 2️ Guardar historial usando constructor de dominio
+                // 2️ Guardar historial
                 var historial = new ReporteHistorial(
                     idReporte: respuesta.Id,
                     estatusNuevo: respuesta.Estatus,
@@ -44,7 +44,7 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
                 );
                 await _historialRepository.Agregar(historial);
 
-                // 3️ Crear evento de negocio usando constructor de dominio
+                // 3️ Crear evento de negocio
                 var evento = new Evento(
                     tipoEvento: "ACTIVACION",
                     origen: "API_PUI",

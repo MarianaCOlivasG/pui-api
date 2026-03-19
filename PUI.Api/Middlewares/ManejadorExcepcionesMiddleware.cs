@@ -3,7 +3,6 @@ using PUI.Infrastructure.Identity.Exceptions;
 using PUI.Infrastructure.Infrastructure.Exceptions;
 using PUI.Persistence.Exceptions;
 using System.Net;
-using System.Net.Mail;
 using System.Text.Json;
 
 namespace PUI.Api.Middlewares

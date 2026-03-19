@@ -5,8 +5,6 @@ using PUI.Application;
 using PUI.Identity;
 using PUI.Infrastructure.Jobs;
 using PUI.Persistencia;
-using System.Text.Json.Serialization;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +18,8 @@ builder.Services.AgregarServiciosDeInfraestructure(builder.Configuration);
 builder.Services.AgregarServiciosDeIdentity(builder.Configuration);
 
 // JOB
-builder.Services.AddHostedService<BusquedaContinuaJob>();
+//builder.Services.AddHostedService<BusquedaContinuaJob>();
+builder.Services.AddHostedService<BusquedaContinuaOptimizadaJob>();
 
 // CORS
 var origenesPermitidos = builder.Configuration

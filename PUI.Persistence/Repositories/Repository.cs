@@ -1,13 +1,10 @@
-
-
-using PUI.Application.Interfaces.Repositories;
-using PUI.Persistencia;
 using Microsoft.EntityFrameworkCore;
+using PUI.Application.Interfaces.Repositories;
+using PUI.Application.Utils.Paginacion;
+using PUI.Persistencia;
 
 namespace PUI.Persistence.Repositories
 {
-
-
     public class Repository<T> : IRepository<T> where T : class
     {
         private readonly PUIDbContext dbContext;
@@ -17,36 +14,73 @@ namespace PUI.Persistence.Repositories
             this.dbContext = dbContext;
         }
 
+        public IQueryable<T> Query()
+        {
+            return dbContext.Set<T>().AsNoTracking();
+        }
 
-        Task IRepository<T>.Actualizar(T entidad)
+        public async Task Actualizar(T entidad)
         {
             dbContext.Update(entidad);
-            return Task.CompletedTask;
+            await Task.CompletedTask;
         }
 
-        Task<T> IRepository<T>.Agregar(T entidad)
+        public async Task<T> Agregar(T entidad)
         {
-             dbContext.Add(entidad);
-            return Task.FromResult(entidad);
+            await dbContext.AddAsync(entidad);
+            return entidad;
         }
 
-        Task IRepository<T>.Borrar(T entidad)
+        public async Task Borrar(T entidad)
         {
-             dbContext.Remove(entidad);
-            return Task.CompletedTask;
+            dbContext.Remove(entidad);
+            await Task.CompletedTask;
         }
 
-        async Task<T?> IRepository<T>.ObtenerPorGuid(Guid Id)
+        public async Task<T?> ObtenerPorGuid(Guid id)
         {
-            return await dbContext.Set<T>().FindAsync(Id);
+            return await dbContext.Set<T>().FindAsync(id);
         }
 
-        async Task<IEnumerable<T>> IRepository<T>.ObtenerTodos()
+        public async Task<IEnumerable<T>> ObtenerTodos()
         {
-            return await dbContext.Set<T>().ToListAsync();
+            return await dbContext.Set<T>()
+                .AsNoTracking()
+                .ToListAsync();
         }
 
+        public async Task<ResultadoPaginadoDto<T>> ObtenerTodosPaginados(PaginacionDto paginacion)
+        {
+            var query = dbContext.Set<T>().AsNoTracking();
 
+            return await ObtenerPaginadoInterno(query, paginacion);
+        }
+
+        public async Task<ResultadoPaginadoDto<T>> ObtenerPaginado(
+            IQueryable<T> query,
+            PaginacionDto paginacion)
+        {
+            return await ObtenerPaginadoInterno(query, paginacion);
+        }
+
+        protected async Task<ResultadoPaginadoDto<T>> ObtenerPaginadoInterno(
+            IQueryable<T> query,
+            PaginacionDto paginacion)
+        {
+            var totalRegistros = await query.CountAsync();
+
+            var registros = await query
+                .Skip(paginacion.Omitir)
+                .Take(paginacion.RegistrosPorPagina)
+                .ToListAsync();
+
+            return new ResultadoPaginadoDto<T>
+            {
+                TotalRegistros = totalRegistros,
+                NumeroPagina = paginacion.NumeroPagina,
+                RegistrosPorPagina = paginacion.RegistrosPorPagina,
+                Registros = registros
+            };
+        }
     }
-
 }

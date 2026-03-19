@@ -11,6 +11,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+	</ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\PUI.Application\PUI.Application.csproj" />
   </ItemGroup>

@@ -1,92 +1,121 @@
+using PUI.Domain.Entities;
 using PUI.Domain.Enums;
 using PUI.Domain.Exceptions;
 using PUI.Domain.ValueObjects;
 
-namespace PUI.Domain.Entities
+public class Coincidencia
 {
-    public class Coincidencia
+    public Guid Id { get; private set; }
+
+    public string FolioNotificacionPui { get; private set; } = null!;
+
+    public Guid IdReporte { get; private set; }
+
+    public FaseBusqueda FaseBusqueda { get; private set; }
+
+    public Curp CurpEncontrada { get; private set; } = null!;
+
+    public string? LugarNacimientoEncontrado { get; private set; }
+
+    public string? GuestId { get; private set; }
+
+    public string? TipoEvento { get; private set; }
+
+    public DateTime? FechaEvento { get; private set; }
+
+    public string? DescripcionLugarEvento { get; private set; }
+
+    public string? DetalleNotificacionPui { get; private set; }
+
+    public NivelCoincidencia NivelCoincidencia { get; private set; }
+
+    public bool NotificadoPui { get; private set; }
+
+    public DateTime? FechaNotificacion { get; private set; }
+
+    public EstatusNotificacion EstatusNotificacion { get; private set; }
+
+    public string? LogRespuestaPui { get; private set; }
+
+    public DateTime FechaDetectada { get; private set; }
+
+    public DateTime FechaActualizacion { get; private set; }
+
+    public Reporte Reporte { get; private set; } = null!;
+
+    private Coincidencia() { }
+
+    public static Coincidencia Crear(
+        Guid idReporte,
+        string folioNotificacionPui,
+        Curp curpEncontrada,
+        string? tipoEvento,
+        DateTime? fechaEvento,
+        string? descripcionLugarEvento,
+        string? detalleJson = null,
+        string? lugarNacimiento = null,
+        string? guestId = null,
+        NivelCoincidencia nivel = NivelCoincidencia.POSIBLE,
+        FaseBusqueda fase = FaseBusqueda.Fase3
+    )
     {
-        public Guid Id { get; private set; }
+        // Validación de reglas de negocio
+        if (string.IsNullOrWhiteSpace(folioNotificacionPui))
+            throw new ExcepcionReglaNegocio("Folio requerido");
 
-        public string FolioNotificacionPui { get; private set; } = null!;
+        if (idReporte == Guid.Empty)
+            throw new ExcepcionReglaNegocio("IdReporte requerido");
 
-        public Guid IdReporte { get; private set; }
+        if (curpEncontrada is null)
+            throw new ExcepcionReglaNegocio("CURP requerida");
 
-        public FaseBusqueda FaseBusqueda { get; private set; }
-
-        public Curp CurpEncontrada { get; private set; } = null!;
-
-        public string LugarNacimientoEncontrado { get; private set; } = null!;
-
-        public string GuestId { get; private set; } = null!;
-
-        public string? TipoEvento { get; private set; }
-
-        public DateTime? FechaEvento { get; private set; }
-
-        public string? DescripcionLugarEvento { get; private set; }
-
-        public string? DetalleNotificacionPui { get; private set; }
-
-        public NivelCoincidencia NivelCoincidencia { get; private set; }
-
-        public bool NotificadoPui { get; private set; }
-
-        public DateTime? FechaNotificacion { get; private set; }
-
-        public EstatusNotificacion EstatusNotificacion { get; private set; }
-
-        public string? LogRespuestaPui { get; private set; }
-
-        public DateTime FechaDetectada { get; private set; }
-
-        public DateTime FechaActualizacion { get; private set; }
-
-        public Reporte Reporte { get; private set; } = null!;
-
-        private Coincidencia() { }
-
-        public Coincidencia(
-            string folioNotificacionPui,
-            Guid idReporte,
-            FaseBusqueda faseBusqueda,
-            Curp curpEncontrada,
-            string lugarNacimientoEncontrado,
-            string guestId,
-            NivelCoincidencia nivelCoincidencia
-        )
+        return new Coincidencia
         {
-            ValidarReglas(folioNotificacionPui, idReporte, curpEncontrada);
+            // Se genera nuevo ID
+            Id = Guid.NewGuid(),
 
-            Id = Guid.NewGuid();
-            FolioNotificacionPui = folioNotificacionPui;
-            IdReporte = idReporte;
-            FaseBusqueda = faseBusqueda;
-            CurpEncontrada = curpEncontrada;
-            LugarNacimientoEncontrado = lugarNacimientoEncontrado;
-            GuestId = guestId;
-            NivelCoincidencia = nivelCoincidencia;
+            // Se asignan datos principales
+            IdReporte = idReporte,
+            FolioNotificacionPui = folioNotificacionPui,
+            CurpEncontrada = curpEncontrada,
 
-            EstatusNotificacion = EstatusNotificacion.PENDIENTE;
-            NotificadoPui = false;
+            // Datos de la notificación
+            TipoEvento = tipoEvento,
+            FechaEvento = fechaEvento,
+            DescripcionLugarEvento = descripcionLugarEvento,
+            DetalleNotificacionPui = detalleJson,
 
-            FechaDetectada = DateTime.UtcNow;
-            FechaActualizacion = DateTime.UtcNow;
-        }
+            // Datos adicionales
+            LugarNacimientoEncontrado = lugarNacimiento,
+            GuestId = guestId,
 
-        private void ValidarReglas(
-            string folioNotificacionPui,
-            Guid idReporte,
-            Curp curpEncontrada)
-        {
-            if (string.IsNullOrWhiteSpace(folioNotificacionPui))
-                throw new ExcepcionReglaNegocio($"El campo '{nameof(FolioNotificacionPui)}' es requerido.");
+            // Configuración de negocio
+            NivelCoincidencia = nivel,
+            FaseBusqueda = fase,
 
-            if (idReporte == Guid.Empty)
-                throw new ExcepcionReglaNegocio($"El campo '{nameof(IdReporte)}' es requerido.");
+            // Estado inicial
+            EstatusNotificacion = EstatusNotificacion.PENDIENTE,
+            NotificadoPui = false,
 
-            if (curpEncontrada is null)
-                throw new ExcepcionReglaNegocio($"El campo '{nameof(CurpEncontrada)}' es requerido.");
-        }
+            // Fechas de auditoría
+            FechaDetectada = DateTime.UtcNow,
+            FechaActualizacion = DateTime.UtcNow
+        };
+    }
+
+    public void MarcarComoNotificado(string? respuesta)
+    {
+        NotificadoPui = true;
+        FechaNotificacion = DateTime.UtcNow;
+        EstatusNotificacion = EstatusNotificacion.ENVIADO;
+        LogRespuestaPui = respuesta;
+        FechaActualizacion = DateTime.UtcNow;
+    }
+
+    public void MarcarError(string error)
+    {
+        EstatusNotificacion = EstatusNotificacion.ERROR;
+        LogRespuestaPui = error;
+        FechaActualizacion = DateTime.UtcNow;
     }
 }

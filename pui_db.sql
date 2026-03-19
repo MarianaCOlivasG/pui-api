@@ -85,7 +85,6 @@ CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_coincidencias (
     fecha_detectada DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de deteccion local',
     fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id_coincidencia),
-    UNIQUE INDEX idx_folio_notif (folio_notificacion_pui),
     CONSTRAINT fk_reporte_match FOREIGN KEY (id_reporte) REFERENCES PUI_identity_mgmt.pui_reportes (id_reporte) ON DELETE CASCADE,
     INDEX idx_estatus_envio (estatus_notificacion),
     INDEX idx_reporte_match (id_reporte)
@@ -196,3 +195,29 @@ CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_notificaciones_pam (
 DEFAULT CHARSET=utf8mb4 
 COLLATE=utf8mb4_unicode_ci 
 COMMENT='Notificaciones recibidas desde sistema PAM';
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- GNERICOS
+CREATE TABLE `User_Activity_Log` (
+  `TraceID` int(11) NOT NULL AUTO_INCREMENT,
+  `DateTimeStamp` datetime DEFAULT NULL,
+  `Username` varchar(45) DEFAULT NULL,
+  `SystemName` varchar(45) DEFAULT NULL,
+  `Module` varchar(255) DEFAULT NULL,
+  `EventDescription` varchar(255) DEFAULT NULL,
+  `PreviousValuesJSON` json DEFAULT NULL,
+  `NewValuesJSON` json DEFAULT NULL,
+  PRIMARY KEY (`TraceID`),
+  UNIQUE KEY `idLog_UNIQUE` (`TraceID`)
+) ENGINE=InnoDB AUTO_INCREMENT=101083 DEFAULT CHARSET=utf8;

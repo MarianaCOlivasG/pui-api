@@ -1,6 +1,4 @@
-﻿
-
-namespace PUI.Application.Security
+﻿namespace PUI.Application.Interfaces.Security
 {
     public interface IApiKeyValidator
     {

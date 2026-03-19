@@ -28,5 +28,20 @@ namespace PUI.Api.Dtos.Eventos
         [Display(Name = "segundo_apellido")]
         [JsonPropertyName("segundo_apellido")]
         public string? SegundoApellido { get; set; }
+
+
+        [StringLength(50, ErrorMessage = "El campo '{0}' no puede exceder los {1} caracteres.")]
+        [Display(Name = "tipo_evento")]
+        [JsonPropertyName("tipo_evento")]
+        public string? TipoEvento { get; set; }
+
+        [JsonPropertyName("fecha_evento")]
+        public DateTime? FechaEvento { get; set; }
+
+
+        [StringLength(50, ErrorMessage = "El campo '{0}' no puede exceder los {1} caracteres.")]
+        [Display(Name = "descripcion_lugar_evento")]
+        [JsonPropertyName("descripcion_lugar_evento")]
+        public string? DescripcionLugarEvento { get; set; }
     }
 }
