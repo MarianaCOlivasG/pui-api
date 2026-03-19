@@ -157,3 +157,42 @@ CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_api_logs (
     INDEX idx_http_status (http_status),
     INDEX idx_fecha_request (fecha_request)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Logs tecnicos HTTP';
+
+
+
+CREATE TABLE IF NOT EXISTS PUI_identity_mgmt.pui_notificaciones_pam (
+    id_notificacion VARCHAR(36) NOT NULL COMMENT 'UUID de la notificación PAM',
+    -- Datos de la persona (cifrados)
+    curp VARCHAR(255) NOT NULL COMMENT 'CURP cifrada AES-256',
+    nombre VARCHAR(255) NULL COMMENT 'Nombre cifrado AES-256',
+    primer_apellido VARCHAR(255) NULL COMMENT 'Primer apellido cifrado AES-256',
+    segundo_apellido VARCHAR(255) NULL COMMENT 'Segundo apellido cifrado AES-256',
+    -- Datos del evento
+    tipo_evento VARCHAR(500) NULL COMMENT 'Tipo de operación administrativa',
+    fecha_evento DATE NULL COMMENT 'Fecha del evento en formato YYYY-MM-DD',
+    descripcion_lugar_evento VARCHAR(500) NULL COMMENT 'Descripción del lugar del evento',
+    -- Control interno
+    origen VARCHAR(50) DEFAULT 'PAM' COMMENT 'Origen del sistema',
+    
+    estatus_procesamiento ENUM('PENDIENTE', 'PROCESADO', 'ERROR') 
+        DEFAULT 'PENDIENTE' COMMENT 'Estado del procesamiento interno',
+    
+    error_detalle TEXT NULL COMMENT 'Error en caso de fallo',
+
+    -- Relación opcional a reporte (cuando haga match)
+    id_reporte VARCHAR(36) NULL COMMENT 'FK opcional al reporte PUI',
+
+    -- Auditoría
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_notificacion),
+    INDEX idx_fecha_evento (fecha_evento),
+    INDEX idx_estatus (estatus_procesamiento),
+    CONSTRAINT fk_notificacion_reporte 
+        FOREIGN KEY (id_reporte) 
+        REFERENCES PUI_identity_mgmt.pui_reportes (id_reporte) 
+        ON DELETE SET NULL
+) ENGINE=InnoDB 
+DEFAULT CHARSET=utf8mb4 
+COLLATE=utf8mb4_unicode_ci 
+COMMENT='Notificaciones recibidas desde sistema PAM';

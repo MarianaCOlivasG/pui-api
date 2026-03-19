@@ -26,6 +26,7 @@ namespace PUI.Persistencia
         public DbSet<Evento> Eventos { get; set; } = null!;
         public DbSet<ApiLog> ApiLogs { get; set; } = null!;
         public DbSet<ProcesoBusqueda> ProcesosBusqueda { get; set; } = null!;
+        public DbSet<NotificacionPam> NotificacionesPam { get; set; } = null!;
 
     }
 }

@@ -5,8 +5,10 @@ using Microsoft.Extensions.Options;
 using PUI.Application.Interfaces.ApiPUI;
 using PUI.Application.Interfaces.Busqueda;
 using PUI.Application.Interfaces.Servicios;
+using PUI.Application.Security;
 using PUI.Infrastructure.ApiPUI;
 using PUI.Infrastructure.Busqueda;
+using PUI.Infrastructure.Security;
 using PUI.Infrastructure.Services;
 
 namespace PUI.Persistencia
@@ -30,6 +32,8 @@ namespace PUI.Persistencia
             });
 
             services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+
+            services.AddScoped<IApiKeyValidator, ApiKeyValidator>();
 
             services.AddScoped<IBusquedaService, BusquedaService>();
 
