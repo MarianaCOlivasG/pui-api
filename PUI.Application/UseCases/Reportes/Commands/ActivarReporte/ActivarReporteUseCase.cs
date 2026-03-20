@@ -1,5 +1,6 @@
 ﻿using PUI.Application.Interfaces.Persistence;
 using PUI.Application.Interfaces.Repositories;
+using PUI.Application.UseCases.Reportes.Orquestacion;
 using PUI.Application.Utils.Mediator;
 using PUI.Domain.Entities;
 using PUI.Domain.Enums;
@@ -13,17 +14,21 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
         private readonly IUnitOfWork _unitOfWork;
         private readonly IReportesHistorialRepository _historialRepository;
         private readonly IEventosRepository _eventosRepository;
+        private readonly IOrquestadorReportes _orquestadorReportes;
 
         public ActivarReporteUseCase(
             IReportesRepository repository,
             IUnitOfWork unitOfWork,
             IReportesHistorialRepository historialRepository,
-            IEventosRepository eventosRepository)
+            IEventosRepository eventosRepository,
+            IOrquestadorReportes orquestadorReportes
+            )
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
             _historialRepository = historialRepository;
             _eventosRepository = eventosRepository;
+            _orquestadorReportes = orquestadorReportes;
         }
 
         public async Task<Guid> Handle(ActivarReporteCommand request)
@@ -57,6 +62,8 @@ namespace PUI.Application.UseCases.Reportes.Commands.ActivarReporte
 
                 // 4️ Persistir todo en una sola transacción
                 await _unitOfWork.Persistir();
+
+                _ = _orquestadorReportes.IniciarFlujoAsync(respuesta.Id);
 
                 return respuesta.Id;
             }

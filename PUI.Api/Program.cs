@@ -5,6 +5,8 @@ using PUI.Application;
 using PUI.Identity;
 using PUI.Infrastructure.Jobs;
 using PUI.Persistencia;
+using Hangfire;
+using Hangfire.MySql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,9 +19,25 @@ builder.Services.AgregarServiciosDePersistencia(builder.Configuration);
 builder.Services.AgregarServiciosDeInfraestructure(builder.Configuration);
 builder.Services.AgregarServiciosDeIdentity(builder.Configuration);
 
+// Hangfire config
+var hangfireConnection = builder.Configuration.GetConnectionString("HangfireConnection");
+
+builder.Services.AddHangfire(config =>
+{
+    config.UseStorage(new MySqlStorage(hangfireConnection, new MySqlStorageOptions
+    {   TablesPrefix = "hf_",
+        PrepareSchemaIfNecessary = true,
+        QueuePollInterval = TimeSpan.FromSeconds(15)
+    }));
+});
+
+builder.Services.AddHangfireServer();
+
 // JOB
 //builder.Services.AddHostedService<BusquedaContinuaJob>();
 builder.Services.AddHostedService<BusquedaContinuaOptimizadaJob>();
+
+
 
 // CORS
 var origenesPermitidos = builder.Configuration

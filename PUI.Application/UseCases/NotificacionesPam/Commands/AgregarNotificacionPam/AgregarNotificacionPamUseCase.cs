@@ -25,6 +25,7 @@ namespace PUI.Application.UseCases.NotificacionesPam.Commands.AgregarNotificacio
         {
             try
             {
+                // Agregar la notificación en basde de datos
                 var notificacionPam = new NotificacionPam(
                     curp: new Curp(request.Curp),
                     nombre: request.Nombre,
@@ -36,6 +37,12 @@ namespace PUI.Application.UseCases.NotificacionesPam.Commands.AgregarNotificacio
                  );
 
                 var respuesta = await _repository.Agregar(notificacionPam);
+
+                // Realizar busqueda inicial, para completar datos
+
+                // Realizar busqueda historica
+
+                // Notificar PUI
 
                 await _unitOfWork.Persistir();
 

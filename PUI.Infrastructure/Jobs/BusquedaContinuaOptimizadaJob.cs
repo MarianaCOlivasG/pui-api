@@ -179,8 +179,7 @@ namespace PUI.Infrastructure.Jobs
                             .AsNoTracking()
                             .AnyAsync(c => c.FolioNotificacionPui == folio, ct);
 
-                        if (existe)
-                            continue;
+                        if ( existe ) continue;
 
                         // Crear coincidencia
                         var coincidencia = Coincidencia.Crear(
