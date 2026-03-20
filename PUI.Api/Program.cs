@@ -1,15 +1,11 @@
 using Hangfire;
-using Hangfire.MySql;
+using Hangfire.Redis.StackExchange;
 using PUI.Api.Configuration;
 using PUI.Api.Filters;
 using PUI.Api.Middlewares;
 using PUI.Application;
-using PUI.Application.Interfaces.Jobs;
 using PUI.Identity;
 using PUI.Persistencia;
-using System.Diagnostics;
-using System.Transactions;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,27 +19,20 @@ builder.Services.AgregarServiciosDeInfraestructure(builder.Configuration);
 builder.Services.AgregarServiciosDeIdentity(builder.Configuration);
 
 // Hangfire config
-var hangfireConnection = builder.Configuration.GetConnectionString("HangfireConnection");
+var redisConnection = builder.Configuration.GetConnectionString("RedisConnection");
 
 builder.Services.AddHangfire(config =>
 {
-    config.UseStorage(new MySqlStorage(
-        hangfireConnection,
-        new MySqlStorageOptions
-        {
-            TablesPrefix = "hf_",
-            PrepareSchemaIfNecessary = true,
-            QueuePollInterval = TimeSpan.FromSeconds(10),
-
-            //  CLAVE
-            TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted,
-
-        }));
+    config.UseRedisStorage(redisConnection, new RedisStorageOptions
+    {
+        Prefix = "hangfire:",
+        Db = 0
+    });
 });
 
 builder.Services.AddHangfireServer(options =>
 {
-    options.WorkerCount = 10; // baja esto temporalmente
+    options.WorkerCount = Environment.ProcessorCount * 2;
 });
 
 // JOB
@@ -118,11 +107,24 @@ using (var scope = app.Services.CreateScope())
 {
     var recurring = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
 
-    recurring.AddOrUpdate(
+    recurring.AddOrUpdate<TestJob>(
         "test-cada-minuto",
-        () => Console.WriteLine($"[HANGFIRE] Ejecutando: {DateTime.Now}"),
-        "* * * * *"
+        job => job.Ejecutar(),
+        "* * * * *",
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.Local
+        }
     );
 }
 
 app.Run();
+
+
+public class TestJob
+{
+    public void Ejecutar()
+    {
+        Console.WriteLine($"[HANGFIRE] Ejecutando: {DateTime.Now:HH:mm:ss.fff}");
+    }
+}
