@@ -25,10 +25,19 @@ namespace PUI.Api.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
+            var path = context.Request.Path.Value?.ToLower() ?? "";
+
+            // EXCLUIR HANGFIRE COMPLETAMENTE
+            if (path.StartsWith("/hangfire"))
+            {
+                await _next(context);
+                return;
+            }
+
             var sw = Stopwatch.StartNew();
 
             string? requestBody = null;
-            
+
             if (context.Request.ContentLength > 0 && context.Request.Body.CanRead)
             {
                 context.Request.EnableBuffering();
@@ -39,7 +48,6 @@ namespace PUI.Api.Middlewares
                     leaveOpen: true);
 
                 var body = await reader.ReadToEndAsync();
-
                 context.Request.Body.Position = 0;
 
                 requestBody = string.IsNullOrWhiteSpace(body) ? null : body;

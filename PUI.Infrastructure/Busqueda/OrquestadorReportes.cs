@@ -1,41 +1,30 @@
-﻿using PUI.Application.Interfaces.Busqueda;
-using PUI.Application.Interfaces.Servicios;
+﻿using Hangfire;
+using PUI.Application.Interfaces.Busqueda;
 using PUI.Application.UseCases.Reportes.Orquestacion;
 
 namespace PUI.Infrastructure.Busqueda
 {
-
-
     public class OrquestadorReportes : IOrquestadorReportes
     {
-        private readonly IBusquedaFase1Service _fase1;
-        private readonly IBusquedaFase2Service _fase2;
+        private readonly IBackgroundJobClient _backgroundJobClient;
 
-        public OrquestadorReportes(
-            IBusquedaFase1Service fase1,
-            IBusquedaFase2Service fase2)
+        public OrquestadorReportes(IBackgroundJobClient backgroundJobClient)
         {
-            _fase1 = fase1;
-            _fase2 = fase2;
+            _backgroundJobClient = backgroundJobClient;
         }
 
         public Task IniciarFlujoAsync(Guid reporteId)
         {
-            // FIRE AND FORGET (NO BLOQUEA API)
-            _ = Task.Run(async () =>
-            {
-                await _fase1.Ejecutar(reporteId);
+            _backgroundJobClient.Enqueue<IBusquedaFase1Service>(
+                x => x.Ejecutar(reporteId)
+            );
 
-                await Task.Delay(TimeSpan.FromMinutes(2));
-
-                await _fase2.Ejecutar(reporteId);
-
-                // fase 3 futura aquí
-            });
+            _backgroundJobClient.Schedule<IBusquedaFase2Service>(
+                x => x.Ejecutar(reporteId),
+                TimeSpan.FromMinutes(2)
+            );
 
             return Task.CompletedTask;
         }
     }
-
-
 }

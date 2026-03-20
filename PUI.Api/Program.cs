@@ -1,12 +1,15 @@
+using Hangfire;
+using Hangfire.MySql;
 using PUI.Api.Configuration;
 using PUI.Api.Filters;
 using PUI.Api.Middlewares;
 using PUI.Application;
+using PUI.Application.Interfaces.Jobs;
 using PUI.Identity;
-using PUI.Infrastructure.Jobs;
 using PUI.Persistencia;
-using Hangfire;
-using Hangfire.MySql;
+using System.Diagnostics;
+using System.Transactions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,20 +27,28 @@ var hangfireConnection = builder.Configuration.GetConnectionString("HangfireConn
 
 builder.Services.AddHangfire(config =>
 {
-    config.UseStorage(new MySqlStorage(hangfireConnection, new MySqlStorageOptions
-    {   TablesPrefix = "hf_",
-        PrepareSchemaIfNecessary = true,
-        QueuePollInterval = TimeSpan.FromSeconds(15)
-    }));
+    config.UseStorage(new MySqlStorage(
+        hangfireConnection,
+        new MySqlStorageOptions
+        {
+            TablesPrefix = "hf_",
+            PrepareSchemaIfNecessary = true,
+            QueuePollInterval = TimeSpan.FromSeconds(10),
+
+            //  CLAVE
+            TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted,
+
+        }));
 });
 
-builder.Services.AddHangfireServer();
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = 10; // baja esto temporalmente
+});
 
 // JOB
-//builder.Services.AddHostedService<BusquedaContinuaJob>();
-builder.Services.AddHostedService<BusquedaContinuaOptimizadaJob>();
-
-
+// builder.Services.AddHostedService<BusquedaContinuaJob>();
+// builder.Services.AddHostedService<BusquedaContinuaOptimizadaJob>();
 
 // CORS
 var origenesPermitidos = builder.Configuration
@@ -81,6 +92,7 @@ app.UseManejadorExcepciones();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 // OpenAPI
 if (app.Environment.IsDevelopment())
 {
@@ -88,5 +100,29 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
+
+
+app.UseHangfireDashboard("/hangfire");
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    var recurring = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+//
+//    recurring.AddOrUpdate<IBusquedaSchedulerJob>(
+//        "busqueda-continua-pui",
+//        job => job.EjecutarBatch(),
+//        "*/3 * * * *"
+//    );
+//}
+using (var scope = app.Services.CreateScope())
+{
+    var recurring = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+
+    recurring.AddOrUpdate(
+        "test-cada-minuto",
+        () => Console.WriteLine($"[HANGFIRE] Ejecutando: {DateTime.Now}"),
+        "* * * * *"
+    );
+}
 
 app.Run();

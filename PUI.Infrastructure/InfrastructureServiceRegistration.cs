@@ -4,11 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PUI.Application.Interfaces.ApiPUI;
 using PUI.Application.Interfaces.Busqueda;
+using PUI.Application.Interfaces.Jobs;
 using PUI.Application.Interfaces.Security;
 using PUI.Application.Interfaces.Servicios;
 using PUI.Application.UseCases.Reportes.Orquestacion;
 using PUI.Infrastructure.ApiPUI;
 using PUI.Infrastructure.Busqueda;
+using PUI.Infrastructure.Jobs;
 using PUI.Infrastructure.Security;
 using PUI.Infrastructure.Services;
 
@@ -42,6 +44,10 @@ namespace PUI.Persistencia
             services.AddScoped<IBusquedaFase2Service, BusquedaFase2Service>();
             services.AddScoped<IOrquestadorReportes, OrquestadorReportes>();
 
+            services.AddScoped<IBusquedaSchedulerJob, BusquedaSchedulerJob>();
+            services.AddScoped<IBusquedaFase3Job, BusquedaFase3Job>();
+
+            //services.AddHostedService<BusquedaSchedulerInitializer>();
 
             return services;
         }
