@@ -47,7 +47,7 @@ namespace PUI.Persistencia
             services.AddScoped<IBusquedaSchedulerJob, BusquedaSchedulerJob>();
             services.AddScoped<IBusquedaFase3Job, BusquedaFase3Job>();
 
-            //services.AddHostedService<BusquedaSchedulerInitializer>();
+            services.AddHostedService<BusquedaSchedulerInitializer>();
 
             return services;
         }

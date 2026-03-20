@@ -93,16 +93,7 @@ app.MapControllers();
 
 app.UseHangfireDashboard("/hangfire");
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var recurring = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-//
-//    recurring.AddOrUpdate<IBusquedaSchedulerJob>(
-//        "busqueda-continua-pui",
-//        job => job.EjecutarBatch(),
-//        "*/3 * * * *"
-//    );
-//}
+
 using (var scope = app.Services.CreateScope())
 {
     var recurring = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
